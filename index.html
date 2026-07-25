@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="description" content="Presence — Real people. Real places. Real connection.">
+  <title>Presence — Enjoy the presence of others</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo" onclick="showView('home')">
+          <span class="logo-icon">🌿</span>
+          <span class="logo-text">Presence</span>
+        </div>
+        <nav class="nav">
+          <button class="nav-btn" onclick="showView('home')">Moments</button>
+          <button class="nav-btn primary" onclick="showView('host')">+ Host</button>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <section id="view-home" class="view active">
+        <div class="hero">
+          <h1>Come as you are.<br>Leave less alone.</h1>
+          <p class="hero-sub">Simple moments of real presence — coffee, walks, meals, games — with people who choose acceptance over judgment.</p>
+        </div>
+        <div class="culture-card">
+          <h2>Our shared commitment</h2>
+          <ul class="culture-list">
+            <li><strong>Presence over performance.</strong> No fixing, no ranking, no pressure to be impressive.</li>
+            <li><strong>Acceptance is the default.</strong> Judgment, criticism, and toxicity have no place here.</li>
+            <li><strong>Encouragement is welcome.</strong> Kind words and genuine interest are the culture.</li>
+            <li><strong>Come as you are.</strong> Ordinary people looking for hope, connection, and the reminder that we are not alone.</li>
+          </ul>
+          <p class="culture-note">Every host agrees to this. Feedback after each moment helps keep it true.</p>
+        </div>
+        <div class="section-header">
+          <h2>Nearby Moments</h2>
+          <div class="filters">
+            <button class="filter-chip active" data-filter="all">All</button>
+            <button class="filter-chip" data-filter="Coffee">Coffee</button>
+            <button class="filter-chip" data-filter="Walk">Walk</button>
+            <button class="filter-chip" data-filter="Meal">Meal</button>
+            <button class="filter-chip" data-filter="Game">Game</button>
+          </div>
+        </div>
+        <div id="moments-list" class="moments-grid"></div>
+        <div class="empty-state" id="empty-state" style="display:none;">
+          <p>No moments match right now.</p>
+          <button class="btn primary" onclick="showView('host')">Be the first to host one</button>
+        </div>
+      </section>
+      <section id="view-host" class="view">
+        <div class="page-header">
+          <button class="back-btn" onclick="showView('home')">← Back</button>
+          <h1>Host a Moment</h1>
+          <p>Under a minute. Keep it simple and welcoming.</p>
+        </div>
+        <form id="host-form" class="host-form">
+          <div class="form-group">
+            <label>What kind of moment?</label>
+            <div class="activity-options">
+              <label class="activity-option"><input type="radio" name="activity" value="Coffee" checked><span>☕ Coffee</span></label>
+              <label class="activity-option"><input type="radio" name="activity" value="Walk"><span>🚶 Walk</span></label>
+              <label class="activity-option"><input type="radio" name="activity" value="Meal"><span>🍽️ Meal</span></label>
+              <label class="activity-option"><input type="radio" name="activity" value="Game"><span>🎲 Game night</span></label>
+              <label class="activity-option"><input type="radio" name="activity" value="Other"><span>✨ Other</span></label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="title">Short title <span class="optional">(optional)</span></label>
+            <input type="text" id="title" placeholder="e.g. Quiet morning coffee" maxlength="60">
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label for="date">Date</label><input type="date" id="date" required></div>
+            <div class="form-group"><label for="time">Time</label><input type="time" id="time" required></div>
+          </div>
+          <div class="form-group">
+            <label for="place">Place (public preferred)</label>
+            <input type="text" id="place" placeholder="e.g. Starbucks on Main, or City Park entrance" required>
+          </div>
+          <div class="form-group">
+            <label for="city">City / Area</label>
+            <input type="text" id="city" placeholder="e.g. Stockbridge, Conyers, Atlanta" required>
+          </div>
+          <div class="form-group">
+            <label for="capacity">Max people</label>
+            <select id="capacity">
+              <option value="3">3</option>
+              <option value="4" selected>4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="8">8</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Vibe (choose any that fit)</label>
+            <div class="vibe-options">
+              <label class="vibe-chip"><input type="checkbox" name="vibe" value="Quiet & accepting"> Quiet & accepting</label>
+              <label class="vibe-chip"><input type="checkbox" name="vibe" value="Encouraging"> Encouraging</label>
+              <label class="vibe-chip"><input type="checkbox" name="vibe" value="No agenda"> No agenda</label>
+              <label class="vibe-chip"><input type="checkbox" name="vibe" value="Introvert-friendly"> Introvert-friendly</label>
+              <label class="vibe-chip"><input type="checkbox" name="vibe" value="Open conversation"> Open conversation</label>
+              <label class="vibe-chip"><input type="checkbox" name="vibe" value="Faith-friendly open"> Faith-friendly open</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="note">Note to guests <span class="optional">(optional)</span></label>
+            <textarea id="note" rows="2" placeholder="Anything that helps people feel welcome..."></textarea>
+          </div>
+          <div class="charter-agree">
+            <label>
+              <input type="checkbox" id="agree-charter" required>
+              I agree to host according to the Presence commitments: presence over performance, acceptance as default, no judgment or toxicity.
+            </label>
+          </div>
+          <button type="submit" class="btn primary full">Publish Moment</button>
+        </form>
+      </section>
+      <section id="view-detail" class="view">
+        <div class="page-header">
+          <button class="back-btn" onclick="showView('home')">← Back</button>
+        </div>
+        <div id="detail-content"></div>
+      </section>
+      <section id="view-success" class="view">
+        <div class="success-card">
+          <div class="success-icon">✓</div>
+          <h1>Moment published</h1>
+          <p>People can now find and join it. Thank you for creating space for connection.</p>
+          <button class="btn primary" onclick="showView('home')">See all Moments</button>
+        </div>
+      </section>
+    </main>
+    <footer class="footer">
+      <p>Presence · Ordinary people · Real places · Acceptance first</p>
+    </footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
