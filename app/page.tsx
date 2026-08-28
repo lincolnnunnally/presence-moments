@@ -89,6 +89,8 @@ export default function Home() {
   const [detail, setDetail] = useState<Moment | null>(null);
   const [requests, setRequests] = useState<JoinRequest[]>([]);
   const [myRequest, setMyRequest] = useState<JoinRequest | null>(null);
+  const [joinError, setJoinError] = useState("");
+  const [joinBusy, setJoinBusy] = useState(false);
 
   // host form
   const [hActivity, setHActivity] = useState("Coffee");
@@ -217,7 +219,16 @@ export default function Home() {
   }
 
   async function requestJoin() {
-    if (!sb || !user || !detail) return;
+    setJoinError("");
+    if (!user) {
+      setJoinError("Sign in first so the host knows who asked.");
+      return;
+    }
+    if (!sb || !detail) {
+      setJoinError("Couldn't reach Presence right now. Try again.");
+      return;
+    }
+    setJoinBusy(true);
     const { data, error } = await sb
       .from("presence_join_requests")
       .insert({
@@ -227,7 +238,11 @@ export default function Home() {
       })
       .select("*")
       .single();
-    if (error || !data) return;
+    if (error || !data) {
+      setJoinError(error?.message || "Couldn't send that request. Try again.");
+      setJoinBusy(false);
+      return;
+    }
     setMyRequest(data as JoinRequest);
     fetch("/api/journey", {
       method: "POST",
@@ -240,11 +255,20 @@ export default function Home() {
         detail: "Reaching out for real connection.",
       }),
     }).catch(() => {});
+    setJoinBusy(false);
   }
 
   async function respond(reqId: string, status: "accepted" | "declined") {
-    if (!sb) return;
-    await sb.from("presence_join_requests").update({ status }).eq("id", reqId);
+    setJoinError("");
+    if (!sb) {
+      setJoinError("Couldn't reach Presence right now. Try again.");
+      return;
+    }
+    const { error } = await sb.from("presence_join_requests").update({ status }).eq("id", reqId);
+    if (error) {
+      setJoinError(error.message || "Couldn't update that request. Try again.");
+      return;
+    }
     setRequests((prev) => prev.map((r) => (r.id === reqId ? { ...r, status } : r)));
   }
 
@@ -719,6 +743,11 @@ export default function Home() {
               {detail.host_auth_user_id === user.id ? (
                 <div className="req-section">
                   <h3>Requests to join ({requests.length})</h3>
+                  {joinError ? (
+                    <p className="auth-error" role="alert">
+                      {joinError}
+                    </p>
+                  ) : null}
                   {requests.length === 0 ? (
                     <p className="hero-sub" style={{ fontSize: "0.9rem" }}>
                       No requests yet. They&apos;ll appear here as people ask to
@@ -774,9 +803,18 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="detail-actions">
-                  <button className="btn primary full" onClick={requestJoin}>
-                    Request to Join
+                  <button
+                    className="btn primary full"
+                    onClick={requestJoin}
+                    disabled={joinBusy}
+                  >
+                    {joinBusy ? "Sending request…" : "Request to Join"}
                   </button>
+                  {joinError ? (
+                    <p className="auth-error" role="alert">
+                      {joinError}
+                    </p>
+                  ) : null}
                   <p
                     style={{
                       textAlign: "center",
