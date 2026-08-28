@@ -85,6 +85,7 @@ export default function Home() {
   // app
   const [view, setView] = useState<"home" | "host" | "detail" | "success">("home");
   const [moments, setMoments] = useState<Moment[]>([]);
+  const [momentsError, setMomentsError] = useState("");
   const [filter, setFilter] = useState("all");
   const [detail, setDetail] = useState<Moment | null>(null);
   const [requests, setRequests] = useState<JoinRequest[]>([]);
@@ -129,13 +130,18 @@ export default function Home() {
   const loadMoments = useCallback(async () => {
     if (!sb || !user) return;
     const cutoff = new Date(Date.now() - 3 * 3600 * 1000).toISOString();
-    const { data } = await sb
+    const { data, error } = await sb
       .from("presence_moments")
       .select("*")
       .eq("status", "open")
       .gte("starts_at", cutoff)
       .order("starts_at", { ascending: true })
       .limit(200);
+    if (error) {
+      setMomentsError("Could not load moments. Check your connection and try again.");
+      return;
+    }
+    setMomentsError("");
     setMoments((data as Moment[]) || []);
   }, [sb, user]);
 
@@ -202,18 +208,26 @@ export default function Home() {
     window.scrollTo(0, 0);
     if (!sb || !user) return;
     if (m.host_auth_user_id === user.id) {
-      const { data } = await sb
+      const { data, error } = await sb
         .from("presence_join_requests")
         .select("*")
         .eq("moment_id", m.id)
         .order("created_at", { ascending: true });
+      if (error) {
+        setJoinError("Could not load who asked to join.");
+        return;
+      }
       setRequests((data as JoinRequest[]) || []);
     } else {
-      const { data } = await sb
+      const { data, error } = await sb
         .from("presence_join_requests")
         .select("*")
         .eq("moment_id", m.id)
         .maybeSingle();
+      if (error) {
+        setJoinError("Could not load your request for this moment.");
+        return;
+      }
       setMyRequest((data as JoinRequest) || null);
     }
   }
@@ -498,7 +512,14 @@ export default function Home() {
               </div>
             </div>
 
-            {shown.length === 0 ? (
+            {momentsError ? (
+              <div className="empty-state">
+                <p>{momentsError}</p>
+                <button className="btn primary" onClick={() => loadMoments()}>
+                  Try again
+                </button>
+              </div>
+            ) : shown.length === 0 ? (
               <div className="empty-state">
                 <p>No moments match right now.</p>
                 <button className="btn primary" onClick={() => setView("host")}>
