@@ -75,12 +75,13 @@ export default function Home() {
   // auth
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const [authMode, setAuthMode] = useState<"signin" | "signup">("signup");
+  const [authMode, setAuthMode] = useState<"signin" | "signup" | "forgot">("signup");
   const [aEmail, setAEmail] = useState("");
   const [aPass, setAPass] = useState("");
   const [aName, setAName] = useState("");
   const [aError, setAError] = useState("");
   const [aBusy, setABusy] = useState(false);
+  const [aResetNote, setAResetNote] = useState("");
 
   // app
   const [view, setView] = useState<"home" | "host" | "detail" | "success">("home");
@@ -149,6 +150,39 @@ export default function Home() {
     if (user) loadMoments();
     else setMoments([]);
   }, [user, loadMoments]);
+
+  async function handleForgot(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = aEmail.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setAError("Enter the email you used for Presence.");
+      return;
+    }
+    setAError("");
+    setAResetNote("");
+    setABusy(true);
+    try {
+      const res = await fetch(
+        "https://uqhqulrqcygsmmzdzemx.supabase.co/functions/v1/ecosystem-auth-reset",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ app: "presence", email: trimmed }),
+        },
+      );
+      if (!res.ok) {
+        setAError("Couldn't send a reset email right now. Try again, or write lincoln@unitedundergod.org.");
+        return;
+      }
+      setAResetNote(
+        "If an account exists for that email, we've sent a reset link. Check inbox and spam. This resets your Life Produces Life login used by Presence — not a Neighborly-only password.",
+      );
+    } catch {
+      setAError("Couldn't send a reset email right now. Try again, or write lincoln@unitedundergod.org.");
+    } finally {
+      setABusy(false);
+    }
+  }
 
   async function handleAuth(e: React.FormEvent) {
     e.preventDefault();
@@ -377,6 +411,22 @@ export default function Home() {
                 with people who choose acceptance over judgment.
               </p>
             </div>
+            {authMode === "forgot" ? (
+              <form className="auth-card" onSubmit={handleForgot}>
+                <input
+                  type="email"
+                  required
+                  value={aEmail}
+                  onChange={(e) => setAEmail(e.target.value)}
+                  placeholder="you@email.com"
+                />
+                {aError && <p className="auth-error">{aError}</p>}
+                {aResetNote && <p className="auth-fine">{aResetNote}</p>}
+                <button type="submit" className="btn primary full" disabled={aBusy}>
+                  {aBusy ? "…" : "Send reset link"}
+                </button>
+              </form>
+            ) : (
             <form className="auth-card" onSubmit={handleAuth}>
               {authMode === "signup" && (
                 <input
@@ -400,24 +450,46 @@ export default function Home() {
                 onChange={(e) => setAPass(e.target.value)}
                 placeholder="Password (8+ characters)"
               />
+              {authMode === "signin" && (
+                <button
+                  type="button"
+                  className="auth-forgot"
+                  onClick={() => {
+                    setAuthMode("forgot");
+                    setAError("");
+                    setAResetNote("");
+                  }}
+                >
+                  Forgot password?
+                </button>
+              )}
               {aError && <p className="auth-error">{aError}</p>}
               <button type="submit" className="btn primary full" disabled={aBusy}>
                 {aBusy ? "…" : authMode === "signup" ? "Join Presence" : "Sign in"}
               </button>
             </form>
+            )}
             <p className="auth-switch">
-              {authMode === "signup" ? "Already have an account?" : "New here?"}{" "}
+              {authMode === "forgot"
+                ? "Remembered it?"
+                : authMode === "signup"
+                  ? "Already have an account?"
+                  : "New here?"}{" "}
               <button
                 onClick={() => {
-                  setAuthMode(authMode === "signup" ? "signin" : "signup");
+                  setAuthMode(authMode === "signup" ? "signin" : authMode === "forgot" ? "signin" : "signup");
                   setAError("");
+                  setAResetNote("");
                 }}
               >
-                {authMode === "signup" ? "Sign in" : "Create one"}
+                {authMode === "signup" ? "Sign in" : authMode === "forgot" ? "Back to sign in" : "Create one"}
               </button>
             </p>
             <p className="auth-fine">
-              Your account works across the whole Life Produces Life family.
+              Your account works across the Life Produces Life family. By continuing you
+              agree to the{" "}
+              <a href="/terms">Terms</a> and <a href="/privacy">Privacy</a> pages (working
+              copy, pending attorney review).
             </p>
           </div>
         </div>
@@ -875,7 +947,10 @@ export default function Home() {
       </main>
 
       <footer className="footer">
-        <p>Presence · Ordinary people · Real places · Acceptance first</p>
+        <p>
+          Presence · Ordinary people · Real places · Acceptance first ·{" "}
+          <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a>
+        </p>
       </footer>
     </div>
   );

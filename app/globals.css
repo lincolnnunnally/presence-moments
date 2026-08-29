@@ -233,6 +233,22 @@ input:focus, select:focus, textarea:focus {
 .auth-switch { text-align: center; margin-top: 16px; font-size: 0.9rem; color: var(--text-muted); }
 .auth-switch button { background: none; border: none; color: var(--teal); font-weight: 600; cursor: pointer; font-family: inherit; }
 .auth-fine { text-align: center; margin-top: 18px; font-size: 0.78rem; color: var(--text-muted); }
+.auth-fine a, .legal a, .footer a { color: var(--teal); }
+.auth-forgot {
+  background: none; border: none; color: var(--teal); font-weight: 600;
+  cursor: pointer; font-family: inherit; font-size: 0.88rem; text-align: left;
+}
+.counsel-banner {
+  background: #fff7ed; border: 1px solid #fdba74; border-radius: 12px;
+  padding: 14px 16px; font-size: 0.9rem; color: var(--text); margin: 16px 0 24px;
+}
+.legal { padding: 32px 20px 60px; }
+.legal h1 { font-family: var(--serif); font-size: 2rem; margin-bottom: 6px; }
+.legal h2 { font-size: 1.1rem; margin: 22px 0 8px; color: var(--teal); }
+.legal p, .legal li { color: var(--text-muted); font-size: 0.98rem; }
+.legal ul { padding-left: 1.2rem; display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.legal-kicker { font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); }
+.legal-updated { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
 
 /* Success */
 .success-card {
