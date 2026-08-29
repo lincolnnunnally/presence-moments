@@ -99,7 +99,7 @@ export default function Home() {
   const [hDate, setHDate] = useState(tomorrowStr());
   const [hTime, setHTime] = useState("10:00");
   const [hPlace, setHPlace] = useState("");
-  const [hCity, setHCity] = useState("");
+  const [hCity, setHCity] = useState("Vidalia, GA");
   const [hCapacity, setHCapacity] = useState(4);
   const [hVibes, setHVibes] = useState<string[]>([]);
   const [hNote, setHNote] = useState("");
@@ -521,7 +521,11 @@ export default function Home() {
               </div>
             ) : shown.length === 0 ? (
               <div className="empty-state">
-                <p>No moments match right now.</p>
+                <p>
+                  {moments.length === 0
+                    ? "No moments in Vidalia yet. Be the first to host coffee, a walk, or pickleball — we will not invent guests for you."
+                    : "No moments match that filter right now."}
+                </p>
                 <button className="btn primary" onClick={() => setView("host")}>
                   Be the first to host one
                 </button>
@@ -641,7 +645,7 @@ export default function Home() {
                   type="text"
                   value={hPlace}
                   onChange={(e) => setHPlace(e.target.value)}
-                  placeholder="e.g. Starbucks on Main, or City Park entrance"
+                  placeholder="e.g. downtown Vidalia coffee, Rec Complex courts, library"
                   required
                 />
               </div>
@@ -653,7 +657,7 @@ export default function Home() {
                   type="text"
                   value={hCity}
                   onChange={(e) => setHCity(e.target.value)}
-                  placeholder="e.g. Stockbridge, Conyers, Atlanta"
+                  placeholder="Vidalia, GA"
                   required
                 />
               </div>
