@@ -562,10 +562,16 @@ export default function Home() {
                   <strong>Come as you are.</strong> Ordinary people looking for
                   hope, connection, and the reminder that we are not alone.
                 </li>
+                <li>
+                  <strong>Receive as well as give.</strong> Many of us hide after
+                  being hurt. If someone kind offers a seat, a meal, or a walk,
+                  one yes can be the next step. This app will not score your
+                  courage. The win is the table, not the screen.
+                </li>
               </ul>
               <p className="culture-note">
                 Every host agrees to this. Feedback after each moment helps keep
-                it true.
+                it true. The win is the walk or the table — not more time here.
               </p>
             </div>
 
@@ -882,10 +888,10 @@ export default function Home() {
               ) : myRequest ? (
                 <div className="join-success">
                   {myRequest.status === "accepted"
-                    ? "✓ You're in! The host accepted your request. See you there."
+                    ? "✓ You're in. The moment is off this phone — go be with them."
                     : myRequest.status === "declined"
                     ? "This one filled up or wasn't a fit. Plenty more moments to find."
-                    : "✓ Request sent. The host will review it soon."}
+                    : "✓ Request sent. The host will review it soon. Asking is already a yes to being with people."}
                   <small
                     style={{
                       display: "block",
@@ -920,8 +926,10 @@ export default function Home() {
                       marginTop: 8,
                     }}
                   >
-                    Location details shared after the host accepts. Culture of
-                    acceptance applies.
+                    Asking can feel scary if you have been hurt. Kind people
+                    offering a moment are usually not that old war. Location
+                    details open after the host accepts. This is not “say yes to
+                    everyone” — trust stays yours.
                   </p>
                 </div>
               )}
@@ -935,8 +943,8 @@ export default function Home() {
               <div className="success-icon">✓</div>
               <h1>Moment published</h1>
               <p>
-                People can now find and join it. Thank you for creating space for
-                connection.
+                You opened a seat. When someone asks, let them come — receiving
+                company is part of hosting. Then put the phone down and be there.
               </p>
               <button className="btn primary" onClick={goHome}>
                 See all Moments
