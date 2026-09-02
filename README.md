@@ -13,6 +13,7 @@ Part of the **Life Produces Life** ecosystem. Accounts, identity, and the growth
 - Browse & filter real, cross-user Moments near you
 - Request to join a Moment; the host reviews and accepts/declines
 - Contributes to the shared UUG growth journey (hosting = giving, joining = receiving)
+- **You Are Awesome tokens:** QR on a laser-engraved coin opens `/t/{code}` — look up, notice the good, maybe join a table. Production and memory live in the Laser Engraving admin Tokens tab. See `YOU_ARE_AWESOME.md`.
 
 ## Stack
 
@@ -26,6 +27,7 @@ Part of the **Life Produces Life** ecosystem. Accounts, identity, and the growth
 
 - `presence_moments` — a hosted moment (host, activity, time, place, city, vibes, capacity)
 - `presence_join_requests` — a guest's request to join (status: requested / accepted / declined)
+- `presence_communities` / `presence_places` / `presence_phrases` / `presence_waves` — You Are Awesome token ops (SQL: `sql/002_you_are_awesome_tokens.sql`)
 
 RLS: any signed-in person can discover open moments; only the host can edit their
 own; guests see their own requests, hosts see requests to their moments.
