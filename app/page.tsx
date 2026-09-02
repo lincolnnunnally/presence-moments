@@ -410,6 +410,9 @@ export default function Home() {
                 Simple moments of real presence — coffee, walks, meals, games —
                 with people who choose acceptance over judgment.
               </p>
+              <a className="found-link" href="/found">
+                Found a coin? You are awesome.
+              </a>
             </div>
             {authMode === "forgot" ? (
               <form className="auth-card" onSubmit={handleForgot}>
@@ -540,6 +543,11 @@ export default function Home() {
               <p className="hero-sub">
                 Simple moments of real presence — coffee, walks, meals, games —
                 with people who choose acceptance over judgment.
+              </p>
+              <p>
+                <a className="found-link" href="/found">
+                  Found a coin? You are awesome.
+                </a>
               </p>
             </div>
 

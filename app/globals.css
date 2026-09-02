@@ -38,7 +38,7 @@ body {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 20px; max-width: 680px; margin: 0 auto;
 }
-.logo { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.logo { display: flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; color: inherit; }
 .logo-icon { font-size: 1.4rem; }
 .logo-text { font-weight: 700; font-size: 1.25rem; color: var(--teal); letter-spacing: -0.02em; }
 .nav { display: flex; gap: 8px; align-items: center; }
@@ -123,7 +123,7 @@ body {
 .btn {
   border: none; padding: 12px 22px; border-radius: 999px;
   font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
-  font-family: inherit;
+  font-family: inherit; text-decoration: none; display: inline-block;
 }
 .btn.primary { background: var(--teal); color: white; }
 .btn.primary:hover { background: var(--teal-dark); }
@@ -275,4 +275,32 @@ input:focus, select:focus, textarea:focus {
 @media (max-width: 480px) {
   .hero h1 { font-size: 1.75rem; }
   .form-row { grid-template-columns: 1fr; }
+}
+
+/* You Are Awesome token landing */
+.token-view { padding-bottom: 80px; }
+.token-kicker {
+  font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--teal); font-weight: 600; margin-bottom: 10px;
+}
+.token-front {
+  font-family: var(--serif); font-weight: 600; font-size: 2.35rem;
+  line-height: 1.15; margin-bottom: 16px;
+}
+.token-message { font-size: 1.08rem; color: var(--text); margin-bottom: 22px; }
+.token-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.token-share, .token-next { margin-top: 32px; }
+.token-share h2, .token-next h2 { font-size: 1.2rem; margin-bottom: 8px; }
+.handoff-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.handoff-list a {
+  display: flex; flex-direction: column; gap: 2px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 14px 16px; text-decoration: none; color: inherit;
+}
+.handoff-list a:hover { border-color: #5eead4; }
+.handoff-list strong { color: var(--teal); }
+.handoff-list span { font-size: 0.9rem; color: var(--text-muted); }
+.found-link {
+  display: inline-block; margin-top: 14px; color: var(--teal);
+  font-weight: 600; font-size: 0.95rem;
 }
