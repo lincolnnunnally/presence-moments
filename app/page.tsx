@@ -14,7 +14,7 @@ type Moment = {
   vibes: string[];
   note: string | null;
   capacity: number | null;
-  host_auth_user_id: string;
+  host_auth_user_id?: string;
   host_name: string | null;
 };
 
@@ -86,6 +86,7 @@ export default function Home() {
   // app
   const [view, setView] = useState<"home" | "host" | "detail" | "success">("home");
   const [moments, setMoments] = useState<Moment[]>([]);
+  const [publicMoments, setPublicMoments] = useState<Moment[]>([]);
   const [momentsError, setMomentsError] = useState("");
   const [filter, setFilter] = useState("all");
   const [detail, setDetail] = useState<Moment | null>(null);
@@ -128,8 +129,26 @@ export default function Home() {
     return () => sub.subscription.unsubscribe();
   }, [sb]);
 
+  const loadPublicMoments = useCallback(async () => {
+    try {
+      const res = await fetch("/api/moments");
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMomentsError(d.error || "Could not load moments. Check your connection and try again.");
+        return;
+      }
+      setMomentsError("");
+      setPublicMoments((d.moments as Moment[]) || []);
+    } catch {
+      setMomentsError("Could not load moments. Check your connection and try again.");
+    }
+  }, []);
+
   const loadMoments = useCallback(async () => {
-    if (!sb || !user) return;
+    if (!sb || !user) {
+      await loadPublicMoments();
+      return;
+    }
     const cutoff = new Date(Date.now() - 3 * 3600 * 1000).toISOString();
     const { data, error } = await sb
       .from("presence_moments")
@@ -144,12 +163,15 @@ export default function Home() {
     }
     setMomentsError("");
     setMoments((data as Moment[]) || []);
-  }, [sb, user]);
+  }, [sb, user, loadPublicMoments]);
 
   useEffect(() => {
     if (user) loadMoments();
-    else setMoments([]);
-  }, [user, loadMoments]);
+    else {
+      setMoments([]);
+      loadPublicMoments();
+    }
+  }, [user, loadMoments, loadPublicMoments]);
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
@@ -413,6 +435,37 @@ export default function Home() {
               <a className="found-link" href="/found">
                 Found a coin? You are awesome.
               </a>
+            </div>
+            <div className="guest-moments">
+              <h2>Nearby in Vidalia</h2>
+              {momentsError ? (
+                <p className="auth-error">{momentsError}</p>
+              ) : publicMoments.length === 0 ? (
+                <p className="hero-sub">
+                  No hosted moments yet. We will not invent guests. Sign in to host coffee, a walk, or a meal —
+                  or scan a coin if one found you.
+                </p>
+              ) : (
+                <div className="moments-grid">
+                  {publicMoments.map((m) => (
+                    <div key={m.id} className="moment-card" style={{ cursor: "default" }}>
+                      <div className="moment-top">
+                        <span className="moment-activity">
+                          {activityEmoji(m.activity)} {m.activity}
+                        </span>
+                        <span className="moment-time">
+                          {fmtDate(m.starts_at)} · {fmtTime(m.starts_at)}
+                        </span>
+                      </div>
+                      <div className="moment-title">{m.title || `${m.activity} moment`}</div>
+                      <div className="moment-place">
+                        {m.place} · {m.city}
+                      </div>
+                      <p className="culture-note">Sign in below to ask to join. The table is the point.</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             {authMode === "forgot" ? (
               <form className="auth-card" onSubmit={handleForgot}>
