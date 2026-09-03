@@ -304,3 +304,5 @@ input:focus, select:focus, textarea:focus {
   display: inline-block; margin-top: 14px; color: var(--teal);
   font-weight: 600; font-size: 0.95rem;
 }
+.guest-moments { margin: 8px 0 28px; text-align: left; }
+.guest-moments h2 { font-size: 1.1rem; margin-bottom: 10px; color: var(--teal); }
