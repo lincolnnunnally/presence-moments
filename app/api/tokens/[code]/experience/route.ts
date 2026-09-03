@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { emitJourneyEvent } from "@/lib/journey";
-import { tablesMissing, waveId } from "@/lib/token-data";
+import { tablesMissing, coinId } from "@/lib/token-data";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,7 +36,7 @@ export async function POST(
   if (what.length > 2000) {
     return NextResponse.json({ ok: false, error: "Keep it to a few sentences." }, { status: 400 });
   }
-  const id = await waveId(sb, code);
+  const id = await coinId(sb, code);
   if (!id) {
     return NextResponse.json({ ok: false, error: "That coin is not in this town yet." }, { status: 404 });
   }
@@ -44,11 +44,12 @@ export async function POST(
     (user.user_metadata as { display_name?: string } | undefined)?.display_name ||
     user.email?.split("@")[0] ||
     "A neighbor";
-  const { error } = await sb.from("presence_experiences").insert({
-    wave_id: id,
+  const { error } = await sb.from("presence_coin_scans").insert({
+    coin_id: id,
+    kind: "notice",
     auth_user_id: user.id,
-    display_name: displayName,
-    what_noticed: what,
+    guest_name: displayName,
+    note: what,
   });
   if (error) {
     if (tablesMissing(error.message)) {

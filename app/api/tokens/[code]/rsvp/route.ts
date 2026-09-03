@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { emitJourneyEvent } from "@/lib/journey";
-import { tablesMissing, waveId } from "@/lib/token-data";
+import { tablesMissing, coinId } from "@/lib/token-data";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,36 +30,37 @@ export async function POST(
   }
   const body = await req.json().catch(() => ({}));
   const status = body.status === "maybe" || body.status === "cant" ? body.status : "going";
-  const id = await waveId(sb, code);
+  const id = await coinId(sb, code);
   if (!id) {
     return NextResponse.json({ ok: false, error: "That invitation is not live." }, { status: 404 });
   }
-  const { data: wave, error: werr } = await sb
-    .from("presence_waves")
-    .select("id, kind, status, invite_at, title")
+  const { data: coin, error: werr } = await sb
+    .from("presence_coins")
+    .select("id, moment_id, status")
     .eq("id", id)
     .maybeSingle();
   if (werr) {
     if (tablesMissing(werr.message)) {
-      return NextResponse.json({ ok: false, error: "Token tables are not on this database yet." }, { status: 503 });
+      return NextResponse.json({ ok: false, error: "Could not load that invitation." }, { status: 503 });
     }
     return NextResponse.json({ ok: false, error: "Could not load that invitation." }, { status: 503 });
   }
-  if (!wave || wave.kind !== "table" || wave.status === "closed" || wave.status === "draft") {
+  if (!coin?.moment_id) {
     return NextResponse.json({ ok: false, error: "There is not an open table for this coin." }, { status: 400 });
   }
   const displayName =
     (user.user_metadata as { display_name?: string } | undefined)?.display_name ||
     user.email?.split("@")[0] ||
     "A neighbor";
-  const { error } = await sb.from("presence_wave_rsvps").upsert(
+  const joinStatus = status === "going" ? "accepted" : status === "cant" ? "declined" : "requested";
+  const { error } = await sb.from("presence_join_requests").upsert(
     {
-      wave_id: id,
-      auth_user_id: user.id,
-      display_name: displayName,
-      status,
+      moment_id: coin.moment_id,
+      guest_auth_user_id: user.id,
+      guest_name: displayName,
+      status: joinStatus,
     },
-    { onConflict: "wave_id,auth_user_id" },
+    { onConflict: "moment_id,guest_auth_user_id" },
   );
   if (error) {
     return NextResponse.json({ ok: false, error: "Could not save that RSVP. Try again." }, { status: 503 });
@@ -70,7 +71,7 @@ export async function POST(
       displayName,
       eventType: "outing_joined",
       title: "Said yes to a table",
-      detail: wave.title || "A You Are Awesome table night.",
+      detail: "A You Are Awesome table night.",
       seasonHint: "belong",
     }).catch(() => {});
   }
