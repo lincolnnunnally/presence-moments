@@ -9,11 +9,13 @@ This is **not** a new app and **not** a scavenger hunt. A token is an invitation
 | Concern | Home |
 |---|---|
 | Public QR, encouragement, share what you noticed, table RSVP, next step into Spark / Kindred / Neighborly / ChurchConnect | **Presence** (`presence.unitedundergod.org/t/{code}`) |
-| Phrase library, restaurant schedule, dates on coins, what is overdone, engraving jobs, staff tasks | **Laser Engraving** admin → **Tokens** |
+| Phrase library, restaurant schedule, dates on coins, what is overdone, engraving jobs, staff tasks, florist samples, shop pages, prices | **Laser Engraving** admin → **Tokens** and **Drops** |
 | Shared identity | LPL `person` / GoTrue — one login |
 | First pilot | Vidalia, Georgia |
 
-Do not build a third "Moments" product. Presence already is the moments app.
+Lincoln does not bounce to Presence to manage laser products. Presence only receives the scan.
+
+Do not build a third "Moments" product. Presence already is the moments app for people gathering. Laser Engrave already is the moments catalog for physical pieces.
 
 ## Coin kinds
 
