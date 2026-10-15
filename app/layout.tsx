@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Telemetry } from '../lib/TelemetryProvider';
+import { ConnectNavLink } from './connect-nav-link';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -34,6 +35,7 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body>
         {children}
+        <ConnectNavLink />
         <Telemetry app="presence" />
       </body>
     </html>
