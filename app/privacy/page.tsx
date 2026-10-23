@@ -4,6 +4,7 @@ import { LegalShell } from "../legal-shell";
 export const metadata: Metadata = {
   title: "Privacy — Presence",
   description: "Working privacy policy for Presence, pending attorney review.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {
