@@ -4,6 +4,7 @@ import { LegalShell } from "../legal-shell";
 export const metadata: Metadata = {
   title: "Terms — Presence",
   description: "Working terms for Presence, pending attorney review.",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

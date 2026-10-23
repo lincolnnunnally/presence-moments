@@ -6,7 +6,13 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://presence.unitedund
 
 const ROUTES: Array<{ path: string; priority: number }> = [
   { path: '/', priority: 1 },
+  // Public explainer pages. Never list /t/*, /connect, /admin or anything per-person.
+  { path: '/host-a-moment', priority: 0.8 },
+  { path: '/join-a-moment', priority: 0.8 },
+  { path: '/meet-one-person', priority: 0.8 },
   { path: '/found', priority: 0.8 },
+  { path: '/terms', priority: 0.3 },
+  { path: '/privacy', priority: 0.3 },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

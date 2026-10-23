@@ -1,14 +1,13 @@
-import type { Metadata } from "next";
+import { FeatureLinks } from "@/components/FeatureLinks";
+import { JsonLd } from "@/components/JsonLd";
+import { featureJsonLd, featureMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Found a coin? — Presence",
-  description:
-    "You Are Awesome tokens find people in town with a small invitation to look up, notice the good, and sit with others.",
-};
+export const metadata = featureMetadata("found");
 
 export default function FoundPage() {
   return (
     <div id="app">
+      <JsonLd data={featureJsonLd("found")} />
       <header className="header">
         <div className="header-inner">
           <a className="logo" href="/">
@@ -51,6 +50,7 @@ export default function FoundPage() {
             Sit with people
           </a>
         </p>
+        <FeatureLinks current="found" />
       </main>
     </div>
   );
