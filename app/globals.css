@@ -449,10 +449,13 @@ input:not([type]), input[type="tel"] {
 .photo-band { position: relative; border-radius: 20px; overflow: hidden; margin-bottom: 14px; background: #e7e2d8; }
 .photo-band img { width: 100%; height: 210px; object-fit: cover; display: block; }
 .photo-band > div {
-  position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 18px 16px;
-  background: linear-gradient(transparent, rgba(15, 23, 42, 0.72));
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 72px 18px 16px;
+  background: linear-gradient(rgba(15, 23, 42, 0), rgba(15, 23, 42, 0.55) 40%, rgba(15, 23, 42, 0.85));
 }
-.photo-band h2 { color: white; font-family: var(--serif); font-size: 1.45rem; font-weight: 600; margin-bottom: 4px; }
+.photo-band h2 {
+  color: white; font-family: var(--serif); font-size: 1.45rem; font-weight: 600; margin-bottom: 4px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+}
 .photo-band p { color: rgba(255, 255, 255, 0.92); font-size: 0.98rem; line-height: 1.4; }
 .wall-row { display: flex; gap: 8px; }
 .wall-row input { flex: 1; min-width: 0; }
