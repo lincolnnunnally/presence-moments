@@ -490,3 +490,4 @@ input:not([type]), input[type="tel"] {
 .token-why { border-top: none; padding-top: 0; }
 .why-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 8px; }
 .why-actions .btn { flex: 1 1 200px; text-align: center; }
+.coin-hero + .token-message, .coin-hero + .hero-sub { text-align: center; }
