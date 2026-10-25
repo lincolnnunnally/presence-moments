@@ -444,3 +444,46 @@ input:not([type]), input[type="tel"] {
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
 }
 @media (max-width: 380px) { .coin-back.has-photo { flex-direction: column; align-items: flex-start; } }
+
+/* Run page, picture-first: photos carry the feeling, words stay short */
+.photo-band { position: relative; border-radius: 20px; overflow: hidden; margin-bottom: 14px; background: #e7e2d8; }
+.photo-band img { width: 100%; height: 210px; object-fit: cover; display: block; }
+.photo-band > div {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 18px 16px;
+  background: linear-gradient(transparent, rgba(15, 23, 42, 0.72));
+}
+.photo-band h2 { color: white; font-family: var(--serif); font-size: 1.45rem; font-weight: 600; margin-bottom: 4px; }
+.photo-band p { color: rgba(255, 255, 255, 0.92); font-size: 0.98rem; line-height: 1.4; }
+.wall-row { display: flex; gap: 8px; }
+.wall-row input { flex: 1; min-width: 0; }
+.wall-row .btn { flex-shrink: 0; padding-left: 22px; padding-right: 22px; }
+.wall-fine { font-size: 0.8rem; color: var(--text-muted); text-align: center; }
+.wall-list li.note-card { display: flex; gap: 12px; align-items: flex-start; border-radius: 18px; }
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%; color: white; font-weight: 700; font-size: 0.95rem;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.note-body { flex: 1; min-width: 0; }
+.wall-empty { text-align: center; color: var(--text-muted); margin-top: 14px; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile {
+  position: relative; display: block; border-radius: 16px; overflow: hidden; aspect-ratio: 4 / 3;
+  text-decoration: none; background: #e7e2d8;
+}
+.tile img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.25s; }
+.tile:hover img { transform: scale(1.04); }
+.tile span {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 12px 10px;
+  color: white; font-weight: 600; font-size: 0.98rem;
+  background: linear-gradient(transparent, rgba(15, 23, 42, 0.75));
+}
+.tile-wide { grid-column: 1 / -1; aspect-ratio: 2 / 1; }
+.hope-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.hope-chips .chip { text-decoration: none; }
+.token-more { margin-top: 18px; }
+.token-more summary { cursor: pointer; color: var(--teal); font-weight: 600; }
+.token-more p { margin-top: 10px; }
+.pass-btn { width: 100%; }
+.token-why { border-top: none; padding-top: 0; }
+.why-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 8px; }
+.why-actions .btn { flex: 1 1 200px; text-align: center; }

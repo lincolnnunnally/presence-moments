@@ -25,6 +25,19 @@ const CARRYING: [string, string][] = [
   ["normal", "Just a normal day"],
 ];
 
+/** First sentence shows; the rest waits behind "Read more". */
+function splitFirst(text: string): [string, string] {
+  const m = text.match(/^([\s\S]+?[.!?])\s+([\s\S]+)$/);
+  return m ? [m[1], m[2]] : [text, ""];
+}
+
+const AVATAR_TONES = ["#0f766e", "#b45309", "#7c3aed", "#be185d", "#1d4ed8", "#4d7c0f"];
+function avatarTone(name: string): string {
+  let h = 0;
+  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return AVATAR_TONES[h % AVATAR_TONES.length];
+}
+
 function ago(iso: string): string {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (!Number.isFinite(mins) || mins < 1) return "just now";
@@ -257,6 +270,9 @@ export default function TokenCard({ initial, initialWall }: Props) {
   }
 
   const invite = formatInvite(wave.invite_at);
+  // Handoffs already shown as photo tiles; the rest become small chips.
+  const friendTile = !wave.facebook_url && !wave.instagram_url;
+  const onTiles = ["presence", "church", ...(friendTile ? ["kindred"] : [])];
   const placeLine = [wave.place_name, wave.place_address, wave.place_city].filter(Boolean).join(" · ");
 
   return (
@@ -285,7 +301,7 @@ export default function TokenCard({ initial, initialWall }: Props) {
           ) : (
             <CoinEmblem design={wave.design} label={`The front of your coin: ${wave.front_text}`} />
           )}
-          <p className="token-kicker">A coin found you in {wave.community_name}</p>
+          <p className="token-kicker">A coin found you</p>
           <h1 className="token-front">{wave.front_text}</h1>
         </div>
         {wave.closed ? (
@@ -327,18 +343,17 @@ export default function TokenCard({ initial, initialWall }: Props) {
         )}
 
         {wave.story && (
-          <section className="token-story">
-            <h2>A little more about this message</h2>
+          <details className="token-more">
+            <summary>A little more about this message</summary>
             {wave.story.split(/\n{2,}/).map((para, i) => (
               <p key={i}>{para}</p>
             ))}
-          </section>
+          </details>
         )}
 
         {wave.found_count > 1 && (
           <p className="culture-note coin-count">
-            {wave.found_count} people have found {wave.run_size > 1 ? "one of these coins" : "this coin"}. You are in good
-            company.
+            {wave.found_count} people have found {wave.run_size > 1 ? "one of these coins" : "this coin"}.
           </p>
         )}
 
@@ -358,7 +373,6 @@ export default function TokenCard({ initial, initialWall }: Props) {
                     Not today
                   </button>
                 </div>
-                <p className="auth-fine wall-fine">Anonymous. It helps us know where to leave more of these.</p>
               </>
             ) : (
               <>
@@ -371,7 +385,7 @@ export default function TokenCard({ initial, initialWall }: Props) {
                 )}
                 {!carrying ? (
                   <>
-                    <p className="hero-sub wall-sub">If you want to say, what were you carrying today?</p>
+                    <p className="hero-sub wall-sub">What were you carrying today?</p>
                     <div className="helped-row">
                       {CARRYING.map(([v, label]) => (
                         <button key={v} type="button" className="chip" onClick={() => answerCarrying(v)}>
@@ -449,33 +463,42 @@ export default function TokenCard({ initial, initialWall }: Props) {
         )}
 
         <section className="token-wall" aria-labelledby="wall-heading">
-          <h2 id="wall-heading">Leave a word for the next person</h2>
-          <p className="hero-sub wall-sub">
-            {wave.run_size > 1
-              ? `There are ${wave.run_size} of these coins out in the world. Everyone who finds one lands on this page.`
-              : "Whoever finds this coin next lands on this page."}{" "}
-            Did it make your day a little better? Say so, and pass some encouragement on.
-          </p>
+          <div className="photo-band">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/img/token/note.jpg" alt="" loading="lazy" />
+            <div>
+              <h2 id="wall-heading">Leave a word for the next person</h2>
+              <p>
+                {wave.run_size > 1 ? `${wave.run_size} of these coins are out there.` : "Someone will find this coin next."}{" "}
+                Pass some hope on.
+              </p>
+            </div>
+          </div>
           {!wave.closed && (
             <form onSubmit={leaveWord} className="wall-form">
               <textarea
                 required
                 minLength={3}
                 maxLength={500}
-                rows={3}
+                rows={2}
                 value={wallMessage}
                 onChange={(e) => setWallMessage(e.target.value)}
                 placeholder={WALL_PROMPTS[wave.code.length % WALL_PROMPTS.length]}
                 aria-label="Your encouragement"
               />
-              <input
-                type="text"
-                maxLength={40}
-                value={wallName}
-                onChange={(e) => setWallName(e.target.value)}
-                placeholder={user ? displayName : "First name or town (optional)"}
-                aria-label="Name to show (optional)"
-              />
+              <div className="wall-row">
+                <input
+                  type="text"
+                  maxLength={40}
+                  value={wallName}
+                  onChange={(e) => setWallName(e.target.value)}
+                  placeholder={user ? displayName : "Your first name (optional)"}
+                  aria-label="Name to show (optional)"
+                />
+                <button className="btn primary" type="submit" disabled={wallBusy || wallMessage.trim().length < 3}>
+                  {wallBusy ? "…" : "Share"}
+                </button>
+              </div>
               <input
                 className="wall-trap"
                 tabIndex={-1}
@@ -487,78 +510,89 @@ export default function TokenCard({ initial, initialWall }: Props) {
               />
               {wallError && <p className="auth-error">{wallError}</p>}
               {wallNote && <p className="wall-thanks">{wallNote}</p>}
-              <button className="btn primary full" type="submit" disabled={wallBusy || wallMessage.trim().length < 3}>
-                {wallBusy ? "…" : "Leave encouragement"}
-              </button>
-              <p className="auth-fine wall-fine">
-                No account needed. Please keep it kind and leave out phone numbers and links.
-              </p>
+              <p className="wall-fine">No account needed. Keep it kind.</p>
             </form>
           )}
           {wall.length > 0 ? (
             <ul className="wall-list">
               {wall.map((n) => (
-                <li key={n.id}>
-                  <p className="wall-message">{n.message}</p>
-                  <p className="wall-meta">
-                    <span>
-                      {n.display_name} · {ago(n.created_at)}
-                    </span>
-                    <button
-                      type="button"
-                      className="wall-flag"
-                      onClick={() => report(n.id)}
-                      disabled={!!reported[n.id]}
-                      aria-label="Flag this note"
-                    >
-                      {reported[n.id] ? "Flagged" : "Flag"}
-                    </button>
-                  </p>
+                <li key={n.id} className="note-card">
+                  <span className="avatar" style={{ background: avatarTone(n.display_name) }} aria-hidden="true">
+                    {(n.display_name.trim()[0] || "•").toUpperCase()}
+                  </span>
+                  <div className="note-body">
+                    <p className="wall-message">{n.message}</p>
+                    <p className="wall-meta">
+                      <span>
+                        {n.display_name} · {ago(n.created_at)}
+                      </span>
+                      <button
+                        type="button"
+                        className="wall-flag"
+                        onClick={() => report(n.id)}
+                        disabled={!!reported[n.id]}
+                        aria-label="Flag this note"
+                      >
+                        {reported[n.id] ? "Flagged" : "Flag"}
+                      </button>
+                    </p>
+                  </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="culture-note">No one has left a note yet. Yours could be the first one someone reads.</p>
+            <p className="wall-empty">Be the first to leave a note.</p>
           )}
         </section>
 
         <section className="token-gather">
           <h2>Find each other</h2>
-          <p className="hero-sub wall-sub">
-            {wave.gather_text ||
-              "The coin is the start, not the point. The people who find these are your neighbors, and some of them would be glad to meet you."}
-          </p>
-          <div className="gather-grid">
+          {wave.gather_text && <p className="hero-sub wall-sub">{wave.gather_text}</p>}
+          <div className="tiles">
             {wave.facebook_url && (
-              <a className="gather-link" href={wave.facebook_url} target="_blank" rel="noopener noreferrer" onClick={() => track("click_facebook")}>
-                <strong>Join the Facebook group</strong>
-                <span>Talk with others who found one of these coins</span>
+              <a className="tile" href={wave.facebook_url} target="_blank" rel="noopener noreferrer" onClick={() => track("click_facebook")}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/img/token/fellowship.jpg" alt="" loading="lazy" />
+                <span>Join the group</span>
               </a>
             )}
             {wave.instagram_url && (
-              <a className="gather-link" href={wave.instagram_url} target="_blank" rel="noopener noreferrer" onClick={() => track("click_instagram")}>
-                <strong>Follow on Instagram</strong>
-                <span>See where the coins are turning up</span>
+              <a className="tile" href={wave.instagram_url} target="_blank" rel="noopener noreferrer" onClick={() => track("click_instagram")}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/img/token/fountain.jpg" alt="" loading="lazy" />
+                <span>See where coins turn up</span>
               </a>
             )}
-            <a className="gather-link" href="/" onClick={() => track("click_meetup")}>
-              <strong>Meet up in person</strong>
-              <span>Coffee, a walk, or a meal with a few people nearby</span>
+            <a className="tile" href="/" onClick={() => track("click_meetup")}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/img/token/coffee.jpg" alt="" loading="lazy" />
+              <span>Meet for coffee</span>
             </a>
-            <a className="gather-link" href="https://churchconnect.cloud/" target="_blank" rel="noopener noreferrer" onClick={() => track("click_church")}>
-              <strong>Find a church</strong>
-              <span>A church family that would be glad you walked in</span>
+            <a className="tile" href="https://churchconnect.cloud/" target="_blank" rel="noopener noreferrer" onClick={() => track("click_church")}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/img/token/church.jpg" alt="" loading="lazy" />
+              <span>Find a church</span>
             </a>
+            {friendTile && (
+              <a className="tile tile-wide" href="https://kindred.unitedundergod.org/">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/img/token/porch-talk.jpg" alt="" loading="lazy" />
+                <span>Make a friend</span>
+              </a>
+            )}
+          </div>
+          <div className="hope-chips">
+            {TOKEN_HANDOFFS.filter((h) => !onTiles.includes(h.id)).map((h) => (
+              <a key={h.id} className="chip" href={h.href} title={h.when}>
+                {h.name}
+              </a>
+            ))}
           </div>
         </section>
 
         <section className="token-pass">
-          <h2>Pass it on</h2>
-          <p className="hero-sub wall-sub">
-            Keep the coin if you need the reminder. If someone else needs it more, leave it where they will find it.
-          </p>
-          <button type="button" className="btn secondary" onClick={passItOn}>
-            Send this page to someone
+          <button type="button" className="btn secondary pass-btn" onClick={passItOn}>
+            Send this to someone who needs it
           </button>
           {shared && <p className="auth-fine">{shared}</p>}
         </section>
@@ -608,35 +642,27 @@ export default function TokenCard({ initial, initialWall }: Props) {
           </p>
         )}
 
-        <section className="token-next">
-          <h2>You are not alone</h2>
-          <p className="hero-sub" style={{ margin: "0 0 16px" }}>
-            If you want a next step, pick one. Not ten. Encouragement, friendship, belonging in this town, or a
-            small way to serve.
-          </p>
-          <ul className="handoff-list">
-            {TOKEN_HANDOFFS.filter((h) => h.id !== "presence" && h.id !== "church").map((h) => (
-              <li key={h.id}>
-                <a href={h.href}>
-                  <strong>{h.name}</strong>
-                  <span>{h.when}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-
         <footer className="token-why">
-          <h2>Why we are doing this</h2>
-          {wave.why_text.split(/\n{2,}/).map((para, i) => (
-            <p key={i}>{para}</p>
-          ))}
-          {wave.sponsor_name && <p className="culture-note">This run of coins was made possible by {wave.sponsor_name}.</p>}
-          <div className="why-give">
-            <p>
-              Want to help more of these find people? Coins, engraving, and the time to place them around town are
-              given freely. You can help keep it going.
-            </p>
+          <div className="photo-band">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/img/token/porch-give.jpg" alt="" loading="lazy" />
+            <div>
+              <h2>Why we do this</h2>
+              <p>{splitFirst(wave.why_text)[0]}</p>
+            </div>
+          </div>
+          {splitFirst(wave.why_text)[1] && (
+            <details className="token-more">
+              <summary>Read more</summary>
+              {splitFirst(wave.why_text)[1]
+                .split(/\n{2,}/)
+                .map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))}
+            </details>
+          )}
+          {wave.sponsor_name && <p className="culture-note">Made possible by {wave.sponsor_name}.</p>}
+          <div className="why-actions">
             <a
               className="btn primary"
               href={wave.give_url}
@@ -646,17 +672,13 @@ export default function TokenCard({ initial, initialWall }: Props) {
             >
               Support this ministry
             </a>
-            <p className="auth-fine">Gifts go to {GIVE_ORG.replace(/\.$/, "")}.</p>
-          </div>
-          <div className="why-order">
-            <p>
-              <strong>Want coins to leave around your own town?</strong> Churches, groups, and neighbors can ask for some.
-              They are free, and we will get them to you.
-            </p>
             <a className="btn secondary" href="/order" onClick={() => track("click_order")}>
-              Request coins
+              Get coins for your town
             </a>
           </div>
+          <p className="auth-fine">
+            Gifts go to {GIVE_ORG.replace(/\.$/, "")}. Coins are free to churches and groups.
+          </p>
           {wave.verse_text && wave.verse_style === "quote" && (
             <p className="auth-fine">Scripture quoted from the Berean Standard Bible (BSB).</p>
           )}
@@ -664,8 +686,7 @@ export default function TokenCard({ initial, initialWall }: Props) {
             <p className="auth-fine">
               <button type="button" className="link-btn" onClick={openAuth}>
                 Sign in
-              </button>{" "}
-              — one login across Presence and its family of apps.
+              </button>
             </p>
           )}
         </footer>
