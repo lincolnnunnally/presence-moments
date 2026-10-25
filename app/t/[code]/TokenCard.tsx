@@ -467,11 +467,8 @@ export default function TokenCard({ initial, initialWall }: Props) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/img/token/note.jpg" alt="" loading="lazy" />
             <div>
-              <h2 id="wall-heading">Leave a word for the next person</h2>
-              <p>
-                {wave.run_size > 1 ? `${wave.run_size} of these coins are out there.` : "Someone will find this coin next."}{" "}
-                Pass some hope on.
-              </p>
+              <h2 id="wall-heading">Leave a note for the next finder</h2>
+              <p>Write a few kind words. Whoever finds a coin like yours will read them here.</p>
             </div>
           </div>
           {!wave.closed && (
