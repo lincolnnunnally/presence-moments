@@ -48,6 +48,9 @@ export type PublicWave = {
   /** How many coins are in this run (everyone in it lands on this page). */
   run_size: number;
   design: CoinDesign;
+  /** Photos of the real coin (Laser storage). Shown instead of the drawn picture. */
+  front_image_url: string | null;
+  back_image_url: string | null;
   verse_ref: string | null;
   verse_text: string | null;
   /** "paraphrase" (plain words, "Inspired by") or "quote" (exact Berean text). */

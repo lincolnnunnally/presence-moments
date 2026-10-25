@@ -70,6 +70,19 @@ function httpsUrl(v: unknown, hosts?: string[]): string | null {
   }
 }
 
+const LASER_HOSTS = ["laser.unitedundergod.org", "laser.engrave.market", "engrave.market", "www.engrave.market"];
+
+/** A coin photo from Laser storage, resized for a phone (Laser caps ?w at 640). */
+function coinPhoto(v: unknown): string | null {
+  const u = httpsUrl(v, LASER_HOSTS);
+  if (!u) return null;
+  const url = new URL(u);
+  if (url.pathname.startsWith("/api/files/") && !url.searchParams.has("w") && !url.pathname.endsWith(".svg")) {
+    url.searchParams.set("w", "640");
+  }
+  return url.toString();
+}
+
 function asDesign(v: unknown, front: string): CoinDesign {
   if (typeof v === "string" && (COIN_DESIGNS as string[]).includes(v)) return v as CoinDesign;
   return /LOVED/i.test(front) ? "cross" : "none";
@@ -179,6 +192,8 @@ export async function loadPublicWave(
     closed: status === "closed",
     run_size: typeof batch?.quantity === "number" ? (batch.quantity as number) : 1,
     design: asDesign(notes.design, coin.front_text),
+    front_image_url: coinPhoto(notes.front_image_url),
+    back_image_url: coinPhoto(notes.back_image_url),
     verse_ref: text(notes.verse_ref, 80),
     verse_text: text(notes.verse_text, 1000),
     // Runs made before paraphrases quoted the Berean text exactly; new ones say "paraphrase".

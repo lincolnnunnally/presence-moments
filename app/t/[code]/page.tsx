@@ -19,6 +19,8 @@ export async function generateMetadata({
     title: `${front} — a coin found you`,
     description: "Someone left this coin for you to find. Read the message, leave a word for the next person, and find people nearby.",
     robots: { index: false, follow: false },
+    // A shared link shows the real coin, so the person it is sent to recognizes it too.
+    ...(wave?.front_image_url ? { openGraph: { images: [{ url: wave.front_image_url }] } } : {}),
   };
 }
 

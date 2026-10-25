@@ -277,7 +277,14 @@ export default function TokenCard({ initial, initialWall }: Props) {
 
       <main className="view token-view">
         <div className="coin-hero">
-          <CoinEmblem design={wave.design} label={`The front of your coin: ${wave.front_text}`} />
+          {wave.front_image_url ? (
+            <div className="coin-photo">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={wave.front_image_url} alt={`The front of your coin: ${wave.front_text}`} />
+            </div>
+          ) : (
+            <CoinEmblem design={wave.design} label={`The front of your coin: ${wave.front_text}`} />
+          )}
           <p className="token-kicker">A coin found you in {wave.community_name}</p>
           <h1 className="token-front">{wave.front_text}</h1>
         </div>
@@ -287,29 +294,35 @@ export default function TokenCard({ initial, initialWall }: Props) {
           <p className="token-message">{wave.web_message}</p>
         )}
 
-        {(wave.verse_text || (wave.back_text && wave.back_text !== "Scan me")) && (
-          <figure className="coin-back">
-            <p className="token-kicker">On the back of your coin</p>
-            {wave.verse_text ? (
-              <>
-                <blockquote>{wave.verse_text}</blockquote>
-                {wave.verse_ref && (
-                  <figcaption>
-                    {wave.verse_style === "paraphrase" ? `Inspired by ${wave.verse_ref}` : wave.verse_ref}
-                    {wave.verse_style === "paraphrase" && fullVerseUrl(wave.verse_ref) && (
-                      <>
-                        {" · "}
-                        <a href={fullVerseUrl(wave.verse_ref) as string} target="_blank" rel="noopener noreferrer">
-                          Read the full verse
-                        </a>
-                      </>
-                    )}
-                  </figcaption>
-                )}
-              </>
-            ) : (
-              <blockquote>{wave.back_text}</blockquote>
+        {(wave.verse_text || wave.back_image_url || (wave.back_text && wave.back_text !== "Scan me")) && (
+          <figure className={`coin-back${wave.back_image_url ? " has-photo" : ""}`}>
+            {wave.back_image_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="coin-back-photo" src={wave.back_image_url} alt="The back of your coin" />
             )}
+            <div>
+              <p className="token-kicker">On the back of your coin</p>
+              {wave.verse_text ? (
+                <>
+                  <blockquote>{wave.verse_text}</blockquote>
+                  {wave.verse_ref && (
+                    <p className="coin-ref">
+                      {wave.verse_style === "paraphrase" ? `Inspired by ${wave.verse_ref}` : wave.verse_ref}
+                      {wave.verse_style === "paraphrase" && fullVerseUrl(wave.verse_ref) && (
+                        <>
+                          {" · "}
+                          <a href={fullVerseUrl(wave.verse_ref) as string} target="_blank" rel="noopener noreferrer">
+                            Read the full verse
+                          </a>
+                        </>
+                      )}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <blockquote>{wave.back_text}</blockquote>
+              )}
+            </div>
           </figure>
         )}
 

@@ -29,7 +29,7 @@ One QR per wave (same design on every coin in the batch). Unique-per-coin engrav
 
 A **run** is one `presence_coin_batches` row: print 100 of the same coin, one QR, and every finder lands on the same page. Top to bottom:
 
-1. **The coin, mirrored.** Front picture (`design`: flower, cross, heart, sun, leaf, none) and front text, then the back (`verse_text` + `verse_ref`, or `back_text`).
+1. **The coin, mirrored.** A photo of the real coin (`front_image_url`, `back_image_url`, from Laser storage) so a finder knows at a glance they are in the right place. If there is no photo, a drawn picture is used instead (`design`: flower, cross, heart, sun, leaf, none). Then the front text, and the back (`verse_text` + `verse_ref`, or `back_text`). In Laser's page editor, each side can use a photo already taken of a token product, an uploaded photo or design screenshot, or the drawn picture. Photos load at `?w=640`, which Laser now turns upright.
 2. **A little more about this message** (`story`, blank lines split paragraphs). Hidden when empty.
 3. **Encouragement wall.** Anyone can leave a note without an account (`presence_coin_encouragements`, keyed to the batch so the whole run shares it). Lincoln asked for this on 2026-10-25: people saying the coin made their day, and encouraging the next finder. It stays bounded: the latest 30, no likes, no counts to chase.
    - Shows at once unless it has a link, email, phone number, @handle, crude language, or all caps. Then it is **held** for a person in Laser → Tokens.
