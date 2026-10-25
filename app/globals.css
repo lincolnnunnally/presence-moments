@@ -369,3 +369,65 @@ input:focus, select:focus, textarea:focus {
 
 /* Visually hidden, still read by screen readers and crawlers. */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.token-helped {
+  margin-top: 28px; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px; text-align: center;
+}
+.token-helped h2 { font-size: 1.1rem; margin-bottom: 10px; }
+.helped-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 6px; }
+.chip {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 8px 14px;
+  font: inherit; font-size: 0.9rem; color: var(--text); cursor: pointer;
+}
+.chip:hover { border-color: #5eead4; }
+.coin-back figcaption a { color: var(--teal); font-weight: 500; }
+.why-order { border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin: 12px 0 8px; }
+.why-order p { margin-bottom: 12px; }
+.chip-on { background: var(--teal); border-color: var(--teal); color: white; }
+.order-form { display: flex; flex-direction: column; gap: 14px; margin-top: 28px; }
+.order-form h2 { font-size: 1.2rem; }
+.order-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 480px) { .order-grid { grid-template-columns: 1fr; } }
+.order-label { display: flex; flex-direction: column; gap: 6px; font-size: 0.92rem; font-weight: 500; }
+.order-for { border: none; }
+.order-for legend { font-size: 0.92rem; font-weight: 500; margin-bottom: 8px; }
+.order-check { display: flex; gap: 10px; align-items: center; font-size: 0.95rem; }
+.order-check input { width: 18px; height: 18px; accent-color: var(--teal); }
+.order-done p { margin-top: 6px; }
+input[type="number"] { font: inherit; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: white; }
+input:not([type]), input[type="tel"] {
+  padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px;
+  font-size: 1rem; font-family: inherit; background: white; width: 100%;
+}
+
+/* Impact report: for churches and foundations; prints cleanly */
+.impact-view { padding-bottom: 80px; }
+.impact-range { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 18px; }
+.impact-range a { text-decoration: none; }
+.impact-honest { margin: 0 0 16px; }
+.impact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+@media (max-width: 560px) { .impact-grid { grid-template-columns: 1fr 1fr; } }
+.impact-stat {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.impact-stat strong { font-family: var(--serif); font-size: 1.9rem; color: var(--teal); line-height: 1.1; }
+.impact-stat span { font-size: 0.85rem; color: var(--text-muted); }
+.impact-section { margin-top: 28px; }
+.impact-section h2 { font-size: 1.15rem; margin-bottom: 10px; }
+.impact-bars { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.impact-bars li { display: grid; grid-template-columns: 8.5rem 1fr auto; align-items: center; gap: 10px; font-size: 0.9rem; }
+.impact-bars .bar { height: 10px; border-radius: 999px; background: var(--teal); opacity: 0.8; }
+.impact-bars b { font-weight: 600; font-size: 0.85rem; white-space: nowrap; }
+.impact-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.impact-table th, .impact-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+.impact-table th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+.impact-table td:not(:first-child), .impact-table th:not(:first-child) { text-align: right; }
+.impact-how p { font-size: 0.9rem; color: var(--text-muted); }
+.impact-support { margin-top: 28px; }
+.impact-support .btn { margin-top: 6px; }
+@media print {
+  .header, .impact-range, .impact-support .btn { display: none; }
+  body { background: white; }
+  .impact-stat, .wall-list li { break-inside: avoid; }
+}

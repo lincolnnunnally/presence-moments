@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createPresenceClient } from "@/lib/supabase";
 import { GIVE_ORG, TOKEN_HANDOFFS, formatInvite, type Encouragement, type PublicWave } from "@/lib/tokens";
+import { fullVerseUrl } from "@/lib/geo";
 import CoinEmblem from "./CoinEmblem";
 
 type Props = { initial: PublicWave; initialWall: Encouragement[] };
@@ -12,6 +13,16 @@ const WALL_PROMPTS = [
   "This made my day better. I hope yours is good too.",
   "Whoever finds the next one: you are not alone.",
   "I needed this today. Passing it on.",
+];
+
+const CARRYING: [string, string][] = [
+  ["lonely", "Loneliness"],
+  ["anxious", "Worry"],
+  ["afraid", "Fear"],
+  ["down", "Feeling low"],
+  ["weary", "Tiredness"],
+  ["grief", "Grief"],
+  ["normal", "Just a normal day"],
 ];
 
 function ago(iso: string): string {
@@ -45,6 +56,8 @@ export default function TokenCard({ initial, initialWall }: Props) {
   const [reported, setReported] = useState<Record<string, boolean>>({});
   const [showAuth, setShowAuth] = useState(false);
   const [shared, setShared] = useState("");
+  const [helped, setHelped] = useState<"" | "yes" | "a_little" | "not_today">("");
+  const [carrying, setCarrying] = useState("");
   const [rsvpNote, setRsvpNote] = useState("");
   const [rsvpError, setRsvpError] = useState("");
   const [rsvpBusy, setRsvpBusy] = useState(false);
@@ -71,6 +84,12 @@ export default function TokenCard({ initial, initialWall }: Props) {
       }
     } catch {
       fetch(`/api/tokens/${encodeURIComponent(initial.code)}?found=1`).catch(() => {});
+    }
+    try {
+      const prior = localStorage.getItem(`token-helped-${initial.code}`);
+      if (prior === "yes" || prior === "a_little" || prior === "not_today") setHelped(prior);
+    } catch {
+      /* private mode */
     }
     return () => sub.subscription.unsubscribe();
   }, [sb, initial.code]);
@@ -161,10 +180,38 @@ export default function TokenCard({ initial, initialWall }: Props) {
     setTimeout(() => document.getElementById("sign-in")?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
   }
 
+  /** Anonymous, counted once per person per day for the impact report. Never blocks the tap. */
+  function track(kind: string, detail?: string) {
+    const url = `/api/tokens/${encodeURIComponent(wave.code)}/event`;
+    const body = JSON.stringify({ kind, detail });
+    try {
+      if (navigator.sendBeacon && navigator.sendBeacon(url, new Blob([body], { type: "application/json" }))) return;
+    } catch {
+      /* fall through */
+    }
+    fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(() => {});
+  }
+
+  function answerHelped(v: "yes" | "a_little" | "not_today") {
+    setHelped(v);
+    track("helped", v);
+    try {
+      localStorage.setItem(`token-helped-${wave.code}`, v);
+    } catch {
+      /* private mode */
+    }
+  }
+
+  function answerCarrying(v: string) {
+    setCarrying(v);
+    track("carrying", v);
+  }
+
   async function passItOn() {
     const url = window.location.href.split("?")[0];
     const text = `${wave.front_text.charAt(0)}${wave.front_text.slice(1).toLowerCase()}. Someone left this for a stranger to find.`;
     try {
+      track("share");
       if (navigator.share) {
         await navigator.share({ title: "A coin found me", text, url });
         return;
@@ -246,7 +293,19 @@ export default function TokenCard({ initial, initialWall }: Props) {
             {wave.verse_text ? (
               <>
                 <blockquote>{wave.verse_text}</blockquote>
-                {wave.verse_ref && <figcaption>{wave.verse_ref}</figcaption>}
+                {wave.verse_ref && (
+                  <figcaption>
+                    {wave.verse_style === "paraphrase" ? `Inspired by ${wave.verse_ref}` : wave.verse_ref}
+                    {wave.verse_style === "paraphrase" && fullVerseUrl(wave.verse_ref) && (
+                      <>
+                        {" · "}
+                        <a href={fullVerseUrl(wave.verse_ref) as string} target="_blank" rel="noopener noreferrer">
+                          Read the full verse
+                        </a>
+                      </>
+                    )}
+                  </figcaption>
+                )}
               </>
             ) : (
               <blockquote>{wave.back_text}</blockquote>
@@ -268,6 +327,52 @@ export default function TokenCard({ initial, initialWall }: Props) {
             {wave.found_count} people have found {wave.run_size > 1 ? "one of these coins" : "this coin"}. You are in good
             company.
           </p>
+        )}
+
+        {!wave.closed && (
+          <section className="token-helped" aria-live="polite">
+            {!helped ? (
+              <>
+                <h2>Did this help today?</h2>
+                <div className="helped-row">
+                  <button type="button" className="btn secondary small" onClick={() => answerHelped("yes")}>
+                    Yes
+                  </button>
+                  <button type="button" className="btn secondary small" onClick={() => answerHelped("a_little")}>
+                    A little
+                  </button>
+                  <button type="button" className="btn secondary small" onClick={() => answerHelped("not_today")}>
+                    Not today
+                  </button>
+                </div>
+                <p className="auth-fine wall-fine">Anonymous. It helps us know where to leave more of these.</p>
+              </>
+            ) : (
+              <>
+                <h2>{helped === "not_today" ? "Thank you for being honest." : "We are so glad."}</h2>
+                {helped === "not_today" && (
+                  <p className="hero-sub wall-sub">
+                    Some days are just hard. You are still loved on this one. If you need someone right now, you can
+                    call or text 988, any time.
+                  </p>
+                )}
+                {!carrying ? (
+                  <>
+                    <p className="hero-sub wall-sub">If you want to say, what were you carrying today?</p>
+                    <div className="helped-row">
+                      {CARRYING.map(([v, label]) => (
+                        <button key={v} type="button" className="chip" onClick={() => answerCarrying(v)}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="hero-sub wall-sub">Thank you. You are not the only one carrying that today.</p>
+                )}
+              </>
+            )}
+          </section>
         )}
 
         {!wave.closed && wave.kind === "place" && wave.notice_prompt && (
@@ -412,22 +517,22 @@ export default function TokenCard({ initial, initialWall }: Props) {
           </p>
           <div className="gather-grid">
             {wave.facebook_url && (
-              <a className="gather-link" href={wave.facebook_url} target="_blank" rel="noopener noreferrer">
+              <a className="gather-link" href={wave.facebook_url} target="_blank" rel="noopener noreferrer" onClick={() => track("click_facebook")}>
                 <strong>Join the Facebook group</strong>
                 <span>Talk with others who found one of these coins</span>
               </a>
             )}
             {wave.instagram_url && (
-              <a className="gather-link" href={wave.instagram_url} target="_blank" rel="noopener noreferrer">
+              <a className="gather-link" href={wave.instagram_url} target="_blank" rel="noopener noreferrer" onClick={() => track("click_instagram")}>
                 <strong>Follow on Instagram</strong>
                 <span>See where the coins are turning up</span>
               </a>
             )}
-            <a className="gather-link" href="/">
+            <a className="gather-link" href="/" onClick={() => track("click_meetup")}>
               <strong>Meet up in person</strong>
               <span>Coffee, a walk, or a meal with a few people nearby</span>
             </a>
-            <a className="gather-link" href="https://churchconnect.cloud/" target="_blank" rel="noopener noreferrer">
+            <a className="gather-link" href="https://churchconnect.cloud/" target="_blank" rel="noopener noreferrer" onClick={() => track("click_church")}>
               <strong>Find a church</strong>
               <span>A church family that would be glad you walked in</span>
             </a>
@@ -519,15 +624,29 @@ export default function TokenCard({ initial, initialWall }: Props) {
               Want to help more of these find people? Coins, engraving, and the time to place them around town are
               given freely. You can help keep it going.
             </p>
-            <a className="btn primary" href={wave.give_url} target="_blank" rel="noopener noreferrer">
+            <a
+              className="btn primary"
+              href={wave.give_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => track("click_give")}
+            >
               Support this ministry
             </a>
-            <p className="auth-fine">
-              Gifts go to {GIVE_ORG.replace(/\.$/, "")}. Churches and groups who want coins for their own town can
-              reach us there too.
-            </p>
+            <p className="auth-fine">Gifts go to {GIVE_ORG.replace(/\.$/, "")}.</p>
           </div>
-          {wave.verse_text && <p className="auth-fine">Scripture quoted from the Berean Standard Bible (BSB).</p>}
+          <div className="why-order">
+            <p>
+              <strong>Want coins to leave around your own town?</strong> Churches, groups, and neighbors can ask for some.
+              They are free, and we will get them to you.
+            </p>
+            <a className="btn secondary" href="/order" onClick={() => track("click_order")}>
+              Request coins
+            </a>
+          </div>
+          {wave.verse_text && wave.verse_style === "quote" && (
+            <p className="auth-fine">Scripture quoted from the Berean Standard Bible (BSB).</p>
+          )}
           {!user && !showAuth && (
             <p className="auth-fine">
               <button type="button" className="link-btn" onClick={openAuth}>

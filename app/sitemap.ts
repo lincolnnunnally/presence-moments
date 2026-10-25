@@ -11,6 +11,7 @@ const ROUTES: Array<{ path: string; priority: number }> = [
   { path: '/join-a-moment', priority: 0.8 },
   { path: '/meet-one-person', priority: 0.8 },
   { path: '/found', priority: 0.8 },
+  { path: '/order', priority: 0.7 },
   { path: '/terms', priority: 0.3 },
   { path: '/privacy', priority: 0.3 },
 ];

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Geo } from "./geo";
 import {
   COIN_DESIGNS,
   DEFAULT_GIVE_URL,
@@ -180,6 +181,8 @@ export async function loadPublicWave(
     design: asDesign(notes.design, coin.front_text),
     verse_ref: text(notes.verse_ref, 80),
     verse_text: text(notes.verse_text, 1000),
+    // Runs made before paraphrases quoted the Berean text exactly; new ones say "paraphrase".
+    verse_style: notes.verse_style === "paraphrase" ? "paraphrase" : "quote",
     story: text(notes.story),
     facebook_url: httpsUrl(notes.facebook_url, ["facebook.com", "fb.com"]),
     instagram_url: httpsUrl(notes.instagram_url, ["instagram.com"]),
@@ -226,7 +229,12 @@ export async function coinId(sb: SupabaseClient, code: string): Promise<string |
   return data?.id ?? null;
 }
 
-export async function bumpFound(sb: SupabaseClient, code: string, ipHash: string | null = null): Promise<void> {
+export async function bumpFound(
+  sb: SupabaseClient,
+  code: string,
+  ipHash: string | null = null,
+  geo: Geo | null = null,
+): Promise<void> {
   const { data } = await sb
     .from("presence_coins")
     .select("id, status")
@@ -253,7 +261,14 @@ export async function bumpFound(sb: SupabaseClient, code: string, ipHash: string
       .gte("created_at", since);
     if ((count || 0) > 0) return;
   }
-  await sb.from("presence_coin_scans").insert({ coin_id: data.id, kind: "found", ip_hash: ipHash });
+  await sb.from("presence_coin_scans").insert({
+    coin_id: data.id,
+    kind: "found",
+    ip_hash: ipHash,
+    city: geo?.city ?? null,
+    region: geo?.region ?? null,
+    country: geo?.country ?? null,
+  });
 }
 
 export { coinId as waveId };

@@ -50,6 +50,8 @@ export type PublicWave = {
   design: CoinDesign;
   verse_ref: string | null;
   verse_text: string | null;
+  /** "paraphrase" (plain words, "Inspired by") or "quote" (exact Berean text). */
+  verse_style: "paraphrase" | "quote";
   /** "A little more about this message" — falls back to nothing, not filler. */
   story: string | null;
   facebook_url: string | null;
