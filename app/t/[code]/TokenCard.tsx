@@ -3,11 +3,29 @@
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createPresenceClient } from "@/lib/supabase";
-import { TOKEN_HANDOFFS, formatInvite, type PublicWave } from "@/lib/tokens";
+import { GIVE_ORG, TOKEN_HANDOFFS, formatInvite, type Encouragement, type PublicWave } from "@/lib/tokens";
+import CoinEmblem from "./CoinEmblem";
 
-type Props = { initial: PublicWave };
+type Props = { initial: PublicWave; initialWall: Encouragement[] };
 
-export default function TokenCard({ initial }: Props) {
+const WALL_PROMPTS = [
+  "This made my day better. I hope yours is good too.",
+  "Whoever finds the next one: you are not alone.",
+  "I needed this today. Passing it on.",
+];
+
+function ago(iso: string): string {
+  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (!Number.isFinite(mins) || mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs} hr ago`;
+  const days = Math.round(hrs / 24);
+  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+export default function TokenCard({ initial, initialWall }: Props) {
   const sb = createPresenceClient();
   const [wave, setWave] = useState(initial);
   const [user, setUser] = useState<User | null>(null);
@@ -17,10 +35,16 @@ export default function TokenCard({ initial }: Props) {
   const [name, setName] = useState("");
   const [authError, setAuthError] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
-  const [noticed, setNoticed] = useState("");
-  const [shareNote, setShareNote] = useState("");
-  const [shareError, setShareError] = useState("");
-  const [shareBusy, setShareBusy] = useState(false);
+  const [wall, setWall] = useState<Encouragement[]>(initialWall);
+  const [wallName, setWallName] = useState("");
+  const [wallMessage, setWallMessage] = useState("");
+  const [wallTrap, setWallTrap] = useState("");
+  const [wallNote, setWallNote] = useState("");
+  const [wallError, setWallError] = useState("");
+  const [wallBusy, setWallBusy] = useState(false);
+  const [reported, setReported] = useState<Record<string, boolean>>({});
+  const [showAuth, setShowAuth] = useState(false);
+  const [shared, setShared] = useState("");
   const [rsvpNote, setRsvpNote] = useState("");
   const [rsvpError, setRsvpError] = useState("");
   const [rsvpBusy, setRsvpBusy] = useState(false);
@@ -87,35 +111,69 @@ export default function TokenCard({ initial }: Props) {
     }
   }
 
-  async function share(e: React.FormEvent) {
+  async function leaveWord(e: React.FormEvent) {
     e.preventDefault();
-    setShareError("");
-    setShareNote("");
-    if (!sb || !user) {
-      setShareError("Sign in first so this is yours.");
-      return;
+    setWallError("");
+    setWallNote("");
+    setWallBusy(true);
+    try {
+      const session = sb ? (await sb.auth.getSession()).data.session : null;
+      const token = session?.access_token;
+      const res = await fetch(`/api/tokens/${encodeURIComponent(wave.code)}/encourage`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ name: wallName || (user ? displayName : ""), message: wallMessage, website: wallTrap }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setWallError(d.error || "Could not save that.");
+        return;
+      }
+      if (d.status === "shown" && d.encouragement) {
+        setWall((w) => [d.encouragement as Encouragement, ...w]);
+        setWave((w) => ({ ...w, encouragement_count: w.encouragement_count + 1 }));
+        setWallNote("Thank you. The next person who finds one of these will read that.");
+      } else {
+        setWallNote("Thank you. Someone will read it before it goes up on the page.");
+      }
+      setWallMessage("");
+    } catch {
+      setWallError("Something went wrong. Please try again.");
+    } finally {
+      setWallBusy(false);
     }
-    setShareBusy(true);
-    const { data } = await sb.auth.getSession();
-    const token = data.session?.access_token;
-    const res = await fetch(`/api/tokens/${encodeURIComponent(wave.code)}/experience`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ what_noticed: noticed }),
-    });
+  }
+
+  async function report(id: string) {
+    if (reported[id]) return;
+    if (!window.confirm("Flag this note as not belonging here? A person will look at it.")) return;
+    setReported((r) => ({ ...r, [id]: true }));
+    const res = await fetch(`/api/tokens/${encodeURIComponent(wave.code)}/encourage/${id}/report`, { method: "POST" });
     const d = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setShareError(d.error || "Could not save that.");
-      setShareBusy(false);
-      return;
+    if (d.hidden) setWall((w) => w.filter((x) => x.id !== id));
+  }
+
+  function openAuth() {
+    setShowAuth(true);
+    setTimeout(() => document.getElementById("sign-in")?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+  }
+
+  async function passItOn() {
+    const url = window.location.href.split("?")[0];
+    const text = `${wave.front_text.charAt(0)}${wave.front_text.slice(1).toLowerCase()}. Someone left this for a stranger to find.`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "A coin found me", text, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShared("Link copied.");
+    } catch {
+      /* the person closed the share sheet */
     }
-    setShareNote("Thank you. Put the phone down and stay with what you noticed.");
-    setNoticed("");
-    setWave((w) => ({ ...w, experience_count: w.experience_count + 1 }));
-    setShareBusy(false);
   }
 
   async function rsvp(status: "going" | "maybe") {
@@ -171,12 +229,45 @@ export default function TokenCard({ initial }: Props) {
       </header>
 
       <main className="view token-view">
-        <p className="token-kicker">{wave.community_name}</p>
-        <h1 className="token-front">{wave.front_text}</h1>
+        <div className="coin-hero">
+          <CoinEmblem design={wave.design} label={`The front of your coin: ${wave.front_text}`} />
+          <p className="token-kicker">A coin found you in {wave.community_name}</p>
+          <h1 className="token-front">{wave.front_text}</h1>
+        </div>
         {wave.closed ? (
           <p className="hero-sub">This invitation has passed. You are still wanted. Here is a next step.</p>
         ) : (
           <p className="token-message">{wave.web_message}</p>
+        )}
+
+        {(wave.verse_text || (wave.back_text && wave.back_text !== "Scan me")) && (
+          <figure className="coin-back">
+            <p className="token-kicker">On the back of your coin</p>
+            {wave.verse_text ? (
+              <>
+                <blockquote>{wave.verse_text}</blockquote>
+                {wave.verse_ref && <figcaption>{wave.verse_ref}</figcaption>}
+              </>
+            ) : (
+              <blockquote>{wave.back_text}</blockquote>
+            )}
+          </figure>
+        )}
+
+        {wave.story && (
+          <section className="token-story">
+            <h2>A little more about this message</h2>
+            {wave.story.split(/\n{2,}/).map((para, i) => (
+              <p key={i}>{para}</p>
+            ))}
+          </section>
+        )}
+
+        {wave.found_count > 1 && (
+          <p className="culture-note coin-count">
+            {wave.found_count} people have found {wave.run_size > 1 ? "one of these coins" : "this coin"}. You are in good
+            company.
+          </p>
         )}
 
         {!wave.closed && wave.kind === "place" && wave.notice_prompt && (
@@ -227,44 +318,135 @@ export default function TokenCard({ initial }: Props) {
                 </button>
               </div>
             ) : (
-              <p className="culture-note">Sign in below to say you are coming.</p>
+              <p className="culture-note">
+                <button type="button" className="link-btn" onClick={openAuth}>
+                  Sign in
+                </button>{" "}
+                to say you are coming, so the table knows how many chairs to pull up.
+              </p>
             )}
             {rsvpError && <p className="auth-error">{rsvpError}</p>}
             {rsvpNote && <p className="auth-fine">{rsvpNote}</p>}
           </div>
         )}
 
-        {!wave.closed && (
-          <section className="token-share">
-            <h2>What did you notice?</h2>
-            <p className="hero-sub" style={{ margin: "0 0 12px" }}>
-              One sentence is enough. This is not a feed. It is a way to remember that goodness was here.
-            </p>
-            {user ? (
-              <form onSubmit={share} className="host-form">
-                <textarea
-                  required
-                  minLength={3}
-                  maxLength={2000}
-                  rows={4}
-                  value={noticed}
-                  onChange={(e) => setNoticed(e.target.value)}
-                  placeholder="The sky, a tree, a kind face, a good meal…"
-                />
-                {shareError && <p className="auth-error">{shareError}</p>}
-                {shareNote && <p className="auth-fine">{shareNote}</p>}
-                <button className="btn primary full" type="submit" disabled={shareBusy}>
-                  {shareBusy ? "…" : "Share this moment"}
-                </button>
-              </form>
-            ) : (
-              <p className="culture-note">Sign in to leave what you noticed — and to stay one person across this family of tools.</p>
-            )}
-          </section>
-        )}
+        <section className="token-wall" aria-labelledby="wall-heading">
+          <h2 id="wall-heading">Leave a word for the next person</h2>
+          <p className="hero-sub wall-sub">
+            {wave.run_size > 1
+              ? `There are ${wave.run_size} of these coins out in the world. Everyone who finds one lands on this page.`
+              : "Whoever finds this coin next lands on this page."}{" "}
+            Did it make your day a little better? Say so, and pass some encouragement on.
+          </p>
+          {!wave.closed && (
+            <form onSubmit={leaveWord} className="wall-form">
+              <textarea
+                required
+                minLength={3}
+                maxLength={500}
+                rows={3}
+                value={wallMessage}
+                onChange={(e) => setWallMessage(e.target.value)}
+                placeholder={WALL_PROMPTS[wave.code.length % WALL_PROMPTS.length]}
+                aria-label="Your encouragement"
+              />
+              <input
+                type="text"
+                maxLength={40}
+                value={wallName}
+                onChange={(e) => setWallName(e.target.value)}
+                placeholder={user ? displayName : "First name or town (optional)"}
+                aria-label="Name to show (optional)"
+              />
+              <input
+                className="wall-trap"
+                tabIndex={-1}
+                autoComplete="off"
+                value={wallTrap}
+                onChange={(e) => setWallTrap(e.target.value)}
+                aria-hidden="true"
+                name="website"
+              />
+              {wallError && <p className="auth-error">{wallError}</p>}
+              {wallNote && <p className="wall-thanks">{wallNote}</p>}
+              <button className="btn primary full" type="submit" disabled={wallBusy || wallMessage.trim().length < 3}>
+                {wallBusy ? "…" : "Leave encouragement"}
+              </button>
+              <p className="auth-fine wall-fine">
+                No account needed. Please keep it kind and leave out phone numbers and links.
+              </p>
+            </form>
+          )}
+          {wall.length > 0 ? (
+            <ul className="wall-list">
+              {wall.map((n) => (
+                <li key={n.id}>
+                  <p className="wall-message">{n.message}</p>
+                  <p className="wall-meta">
+                    <span>
+                      {n.display_name} · {ago(n.created_at)}
+                    </span>
+                    <button
+                      type="button"
+                      className="wall-flag"
+                      onClick={() => report(n.id)}
+                      disabled={!!reported[n.id]}
+                      aria-label="Flag this note"
+                    >
+                      {reported[n.id] ? "Flagged" : "Flag"}
+                    </button>
+                  </p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="culture-note">No one has left a note yet. Yours could be the first one someone reads.</p>
+          )}
+        </section>
 
-        {!user && (
-          <form className="auth-card" onSubmit={handleAuth} style={{ marginTop: 24 }}>
+        <section className="token-gather">
+          <h2>Find each other</h2>
+          <p className="hero-sub wall-sub">
+            {wave.gather_text ||
+              "The coin is the start, not the point. The people who find these are your neighbors, and some of them would be glad to meet you."}
+          </p>
+          <div className="gather-grid">
+            {wave.facebook_url && (
+              <a className="gather-link" href={wave.facebook_url} target="_blank" rel="noopener noreferrer">
+                <strong>Join the Facebook group</strong>
+                <span>Talk with others who found one of these coins</span>
+              </a>
+            )}
+            {wave.instagram_url && (
+              <a className="gather-link" href={wave.instagram_url} target="_blank" rel="noopener noreferrer">
+                <strong>Follow on Instagram</strong>
+                <span>See where the coins are turning up</span>
+              </a>
+            )}
+            <a className="gather-link" href="/">
+              <strong>Meet up in person</strong>
+              <span>Coffee, a walk, or a meal with a few people nearby</span>
+            </a>
+            <a className="gather-link" href="https://churchconnect.cloud/" target="_blank" rel="noopener noreferrer">
+              <strong>Find a church</strong>
+              <span>A church family that would be glad you walked in</span>
+            </a>
+          </div>
+        </section>
+
+        <section className="token-pass">
+          <h2>Pass it on</h2>
+          <p className="hero-sub wall-sub">
+            Keep the coin if you need the reminder. If someone else needs it more, leave it where they will find it.
+          </p>
+          <button type="button" className="btn secondary" onClick={passItOn}>
+            Send this page to someone
+          </button>
+          {shared && <p className="auth-fine">{shared}</p>}
+        </section>
+
+        {!user && showAuth && (
+          <form id="sign-in" className="auth-card" onSubmit={handleAuth} style={{ marginTop: 24 }}>
             <p className="token-kicker">One login. You are the same person here as everywhere else.</p>
             {authMode === "signup" && (
               <input
@@ -311,11 +493,11 @@ export default function TokenCard({ initial }: Props) {
         <section className="token-next">
           <h2>You are not alone</h2>
           <p className="hero-sub" style={{ margin: "0 0 16px" }}>
-            If you want a next step, pick one. Not ten. Friendship before dating. A church that would be glad you
-            walked in. People nearby who care.
+            If you want a next step, pick one. Not ten. Encouragement, friendship, belonging in this town, or a
+            small way to serve.
           </p>
           <ul className="handoff-list">
-            {TOKEN_HANDOFFS.map((h) => (
+            {TOKEN_HANDOFFS.filter((h) => h.id !== "presence" && h.id !== "church").map((h) => (
               <li key={h.id}>
                 <a href={h.href}>
                   <strong>{h.name}</strong>
@@ -325,6 +507,35 @@ export default function TokenCard({ initial }: Props) {
             ))}
           </ul>
         </section>
+
+        <footer className="token-why">
+          <h2>Why we are doing this</h2>
+          {wave.why_text.split(/\n{2,}/).map((para, i) => (
+            <p key={i}>{para}</p>
+          ))}
+          {wave.sponsor_name && <p className="culture-note">This run of coins was made possible by {wave.sponsor_name}.</p>}
+          <div className="why-give">
+            <p>
+              Want to help more of these find people? Coins, engraving, and the time to place them around town are
+              given freely. You can help keep it going.
+            </p>
+            <a className="btn primary" href={wave.give_url} target="_blank" rel="noopener noreferrer">
+              Support this ministry
+            </a>
+            <p className="auth-fine">
+              Gifts go to {GIVE_ORG}. Churches and groups who want coins for their own town can reach us there too.
+            </p>
+          </div>
+          {wave.verse_text && <p className="auth-fine">Scripture quoted from the Berean Standard Bible (BSB).</p>}
+          {!user && !showAuth && (
+            <p className="auth-fine">
+              <button type="button" className="link-btn" onClick={openAuth}>
+                Sign in
+              </button>{" "}
+              — one login across Presence and its family of apps.
+            </p>
+          )}
+        </footer>
       </main>
     </div>
   );
