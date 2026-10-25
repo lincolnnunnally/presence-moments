@@ -431,3 +431,4 @@ input:not([type]), input[type="tel"] {
   body { background: white; }
   .impact-stat, .wall-list li { break-inside: avoid; }
 }
+.culture-card a { color: var(--teal); font-weight: 600; }

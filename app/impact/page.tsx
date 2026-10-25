@@ -31,7 +31,12 @@ type Impact = {
   first_day: string | null;
 };
 
-const RANGES: Record<string, string> = { all: "All time", year: "This year", "90": "Last 90 days" };
+// An array, not an object: a numeric-looking key like "90" would sort first.
+const RANGES: [string, string][] = [
+  ["all", "All time"],
+  ["year", "This year"],
+  ["90", "Last 90 days"],
+];
 const CARRYING: Record<string, string> = {
   lonely: "Loneliness",
   anxious: "Worry",
@@ -58,7 +63,7 @@ function monthLabel(m: string) {
 
 export default async function ImpactPage({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
   const { range: raw } = await searchParams;
-  const range = raw && raw in RANGES ? raw : "all";
+  const range = raw && RANGES.some(([k]) => k === raw) ? raw : "all";
   const sb = createAdminClient();
   let impact: Impact | null = null;
   let notes: { message: string; display_name: string | null }[] = [];
@@ -111,7 +116,7 @@ export default async function ImpactPage({ searchParams }: { searchParams: Promi
         </p>
 
         <nav className="impact-range" aria-label="Time range">
-          {Object.entries(RANGES).map(([k, label]) => (
+          {RANGES.map(([k, label]) => (
             <a key={k} href={k === "all" ? "/impact" : `/impact?range=${k}`} className={`chip${k === range ? " chip-on" : ""}`}>
               {label}
             </a>
@@ -131,7 +136,7 @@ export default async function ImpactPage({ searchParams }: { searchParams: Promi
             <div className="impact-grid">
               <div className="impact-stat">
                 <strong>{n(impact.coins_out)}</strong>
-                <span>coins placed in the world</span>
+                <span>{impact.coins_out === 1 ? "coin" : "coins"} placed in the world</span>
               </div>
               <div className="impact-stat">
                 <strong>{n(impact.towns)}</strong>
@@ -139,7 +144,7 @@ export default async function ImpactPage({ searchParams }: { searchParams: Promi
               </div>
               <div className="impact-stat">
                 <strong>{n(impact.finders)}</strong>
-                <span>people found one and opened it</span>
+                <span>{impact.finders === 1 ? "person" : "people"} found one and opened it</span>
               </div>
               <div className="impact-stat">
                 <strong>{n(helped)}</strong>
@@ -147,11 +152,11 @@ export default async function ImpactPage({ searchParams }: { searchParams: Promi
               </div>
               <div className="impact-stat">
                 <strong>{n(impact.notes)}</strong>
-                <span>notes of encouragement left for strangers</span>
+                <span>{impact.notes === 1 ? "note" : "notes"} of encouragement left for strangers</span>
               </div>
               <div className="impact-stat">
                 <strong>{n(connected)}</strong>
-                <span>steps toward people: groups, meetups, churches</span>
+                <span>{connected === 1 ? "step" : "steps"} toward people: groups, meetups, churches</span>
               </div>
             </div>
 
@@ -161,7 +166,8 @@ export default async function ImpactPage({ searchParams }: { searchParams: Promi
                 {impact.first_day ? `Since ${new Date(impact.first_day + "T12:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}, ` : ""}
                 {n(impact.coins_made)} coins have been made and {n(impact.coins_out)} placed
                 {impact.coins_given ? `, ${n(impact.coins_given)} of them through churches and groups who asked for them` : ""}.
-                They have been opened {n(impact.finds)} times by {n(impact.finders)} people.
+                They have been opened {n(impact.finds)} {impact.finds === 1 ? "time" : "times"} by {n(impact.finders)}{" "}
+                {impact.finders === 1 ? "person" : "people"}.
                 {answered > 0 &&
                   ` Of the ${n(answered)} who answered "did this help today?", ${n(helped)} said yes or a little (${Math.round((helped / answered) * 100)}%).`}
               </p>
