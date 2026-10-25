@@ -279,7 +279,7 @@ export default function TokenCard({ initial, initialWall }: Props) {
           </div>
         )}
 
-        {!wave.closed && wave.kind === "notice" && (
+        {!wave.closed && wave.kind === "notice" && !wave.story && (
           <div className="culture-card">
             <h2>Right where you are</h2>
             <p>
@@ -523,7 +523,8 @@ export default function TokenCard({ initial, initialWall }: Props) {
               Support this ministry
             </a>
             <p className="auth-fine">
-              Gifts go to {GIVE_ORG}. Churches and groups who want coins for their own town can reach us there too.
+              Gifts go to {GIVE_ORG.replace(/\.$/, "")}. Churches and groups who want coins for their own town can
+              reach us there too.
             </p>
           </div>
           {wave.verse_text && <p className="auth-fine">Scripture quoted from the Berean Standard Bible (BSB).</p>}
