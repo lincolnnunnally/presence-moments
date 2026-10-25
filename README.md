@@ -27,7 +27,8 @@ Part of the **Life Produces Life** ecosystem. Accounts, identity, and the growth
 
 - `presence_moments` — a hosted moment (host, activity, time, place, city, vibes, capacity)
 - `presence_join_requests` — a guest's request to join (status: requested / accepted / declined)
-- `presence_communities` / `presence_places` / `presence_phrases` / `presence_waves` — You Are Awesome token ops (SQL: `sql/002_you_are_awesome_tokens.sql`)
+- `presence_coin_batches` (a run) / `presence_coins` / `presence_coin_scans` / `presence_places` — You Are Awesome coins, written by Laser Engraving
+- `presence_coin_encouragements` — the public encouragement wall on a run's page (SQL: `sql/004_token_encouragement.sql`)
 
 RLS: any signed-in person can discover open moments; only the host can edit their
 own; guests see their own requests, hosts see requests to their moments.

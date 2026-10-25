@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { bumpFound, loadPublicWave } from "@/lib/token-data";
+import { ipHash } from "@/lib/encourage";
+import { geoFrom } from "@/lib/geo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,7 +34,7 @@ export async function GET(
   }
   const url = new URL(req.url);
   if (url.searchParams.get("found") === "1" && !wave.closed) {
-    await bumpFound(sb, wave.code).catch(() => {});
+    await bumpFound(sb, wave.code, ipHash(req), geoFrom(req)).catch(() => {});
   }
   return NextResponse.json({ ok: true, wave });
 }

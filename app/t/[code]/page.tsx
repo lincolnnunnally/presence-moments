@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase-admin";
-import { loadPublicWave } from "@/lib/token-data";
+import { coinForCode, loadPublicWave } from "@/lib/token-data";
+import { listEncouragements } from "@/lib/encourage";
 import TokenCard from "./TokenCard";
 
 export const dynamic = "force-dynamic";
@@ -11,10 +12,15 @@ export async function generateMetadata({
   params: Promise<{ code: string }>;
 }): Promise<Metadata> {
   const { code } = await params;
+  const sb = createAdminClient();
+  const wave = sb ? (await loadPublicWave(sb, code)).wave : null;
+  const front = wave?.front_text ? wave.front_text.charAt(0) + wave.front_text.slice(1).toLowerCase() : "You are awesome";
   return {
-    title: `You are awesome — ${code.toUpperCase()}`,
-    description: "A small invitation to look up, notice the good, and remember you are not alone.",
+    title: `${front} — a coin found you`,
+    description: "Someone left this coin for you to find. Read the message, leave a word for the next person, and find people nearby.",
     robots: { index: false, follow: false },
+    // A shared link shows the real coin, so the person it is sent to recognizes it too.
+    ...(wave?.front_image_url ? { openGraph: { images: [{ url: wave.front_image_url }] } } : {}),
   };
 }
 
@@ -61,5 +67,7 @@ export default async function TokenPage({ params }: { params: Promise<{ code: st
       </div>
     );
   }
-  return <TokenCard initial={wave} />;
+  const coin = await coinForCode(sb, wave.code);
+  const encouragements = coin ? await listEncouragements(sb, coin.id, coin.batch_id) : [];
+  return <TokenCard initial={wave} initialWall={encouragements} />;
 }

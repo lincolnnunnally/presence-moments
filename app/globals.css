@@ -300,6 +300,66 @@ input:focus, select:focus, textarea:focus {
 .handoff-list a:hover { border-color: #5eead4; }
 .handoff-list strong { color: var(--teal); }
 .handoff-list span { font-size: 0.9rem; color: var(--text-muted); }
+
+/* Coin run page: the coin face, the back, the wall, find each other, why */
+.coin-hero { text-align: center; padding-top: 8px; }
+.coin-hero .token-front { margin-bottom: 18px; }
+.coin-face { display: flex; justify-content: center; margin-bottom: 14px; }
+.coin-rim { fill: #e8d9b5; stroke: #c9b07a; stroke-width: 2; }
+.coin-inner { fill: #f5ecd6; stroke: #d8c294; stroke-width: 1.5; }
+.coin-mark { fill: #8a6d3b; }
+.coin-center { fill: #c9b07a; }
+.coin-vein { stroke: #f5ecd6; stroke-width: 2; fill: none; }
+.coin-back {
+  background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--teal);
+  border-radius: var(--radius); padding: 18px 20px; margin: 0 0 24px;
+}
+.coin-back blockquote { font-family: var(--serif); font-size: 1.2rem; line-height: 1.45; color: var(--text); }
+.coin-back figcaption, .coin-ref { margin-top: 8px; font-size: 0.9rem; color: var(--teal); font-weight: 600; }
+.token-story, .token-wall, .token-gather, .token-pass, .token-why { margin-top: 32px; }
+.token-story h2, .token-wall h2, .token-gather h2, .token-pass h2, .token-why h2 { font-size: 1.2rem; margin-bottom: 8px; }
+.token-story p { margin-bottom: 12px; }
+.coin-count { text-align: center; margin-top: 4px; }
+.wall-sub { margin: 0 0 14px; max-width: none; }
+.wall-form { display: flex; flex-direction: column; gap: 10px; }
+.wall-trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.wall-thanks { color: var(--teal); font-weight: 600; font-size: 0.95rem; }
+.wall-fine { margin-top: 2px; }
+.wall-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+.wall-list li {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px;
+}
+.wall-message { white-space: pre-wrap; overflow-wrap: anywhere; }
+.wall-meta {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  margin-top: 6px; font-size: 0.82rem; color: var(--text-muted);
+}
+.wall-flag {
+  background: none; border: none; color: var(--text-muted); font-size: 0.78rem;
+  cursor: pointer; padding: 4px 6px; font-family: inherit;
+}
+.wall-flag:hover:not(:disabled) { color: #b91c1c; }
+.gather-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 480px) { .gather-grid { grid-template-columns: 1fr; } }
+.gather-link {
+  display: flex; flex-direction: column; gap: 2px; background: var(--card);
+  border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px;
+  text-decoration: none; color: inherit;
+}
+.gather-link:hover { border-color: #5eead4; }
+.gather-link strong { color: var(--teal); }
+.gather-link span { font-size: 0.88rem; color: var(--text-muted); }
+.token-why { border-top: 1px solid var(--border); padding-top: 28px; }
+.token-why > p { margin-bottom: 12px; color: var(--text); }
+.why-give {
+  background: var(--teal-light); border-radius: var(--radius); padding: 18px 20px; margin: 18px 0 8px;
+}
+.why-give p { margin-bottom: 12px; }
+.why-give .auth-fine { text-align: left; margin: 10px 0 0; }
+.link-btn {
+  background: none; border: none; padding: 0; color: var(--teal); font-weight: 600;
+  cursor: pointer; font: inherit; text-decoration: underline;
+}
 .found-link {
   display: inline-block; margin-top: 14px; color: var(--teal);
   font-weight: 600; font-size: 0.95rem;
@@ -309,3 +369,125 @@ input:focus, select:focus, textarea:focus {
 
 /* Visually hidden, still read by screen readers and crawlers. */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.token-helped {
+  margin-top: 28px; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px; text-align: center;
+}
+.token-helped h2 { font-size: 1.1rem; margin-bottom: 10px; }
+.helped-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 6px; }
+.chip {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 8px 14px;
+  font: inherit; font-size: 0.9rem; color: var(--text); cursor: pointer;
+}
+.chip:hover { border-color: #5eead4; }
+.coin-back figcaption a, .coin-ref a { color: var(--teal); font-weight: 500; }
+.why-order { border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin: 12px 0 8px; }
+.why-order p { margin-bottom: 12px; }
+.chip-on { background: var(--teal); border-color: var(--teal); color: white; }
+.order-form { display: flex; flex-direction: column; gap: 14px; margin-top: 28px; }
+.order-form h2 { font-size: 1.2rem; }
+.order-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 480px) { .order-grid { grid-template-columns: 1fr; } }
+.order-label { display: flex; flex-direction: column; gap: 6px; font-size: 0.92rem; font-weight: 500; }
+.order-for { border: none; }
+.order-for legend { font-size: 0.92rem; font-weight: 500; margin-bottom: 8px; }
+.order-check { display: flex; gap: 10px; align-items: center; font-size: 0.95rem; }
+.order-check input { width: 18px; height: 18px; accent-color: var(--teal); }
+.order-done p { margin-top: 6px; }
+input[type="number"] { font: inherit; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: white; }
+input:not([type]), input[type="tel"] {
+  padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px;
+  font-size: 1rem; font-family: inherit; background: white; width: 100%;
+}
+
+/* Impact report: for churches and foundations; prints cleanly */
+.impact-view { padding-bottom: 80px; }
+.impact-range { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 18px; }
+.impact-range a { text-decoration: none; }
+.impact-honest { margin: 0 0 16px; }
+.impact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+@media (max-width: 560px) { .impact-grid { grid-template-columns: 1fr 1fr; } }
+.impact-stat {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.impact-stat strong { font-family: var(--serif); font-size: 1.9rem; color: var(--teal); line-height: 1.1; }
+.impact-stat span { font-size: 0.85rem; color: var(--text-muted); }
+.impact-section { margin-top: 28px; }
+.impact-section h2 { font-size: 1.15rem; margin-bottom: 10px; }
+.impact-bars { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.impact-bars li { display: grid; grid-template-columns: 8.5rem 1fr auto; align-items: center; gap: 10px; font-size: 0.9rem; }
+.impact-bars .bar { height: 10px; border-radius: 999px; background: var(--teal); opacity: 0.8; }
+.impact-bars b { font-weight: 600; font-size: 0.85rem; white-space: nowrap; }
+.impact-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.impact-table th, .impact-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+.impact-table th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+.impact-table td:not(:first-child), .impact-table th:not(:first-child) { text-align: right; }
+.impact-how p { font-size: 0.9rem; color: var(--text-muted); }
+.impact-support { margin-top: 28px; }
+.impact-support .btn { margin-top: 6px; }
+@media print {
+  .header, .impact-range, .impact-support .btn { display: none; }
+  body { background: white; }
+  .impact-stat, .wall-list li { break-inside: avoid; }
+}
+.culture-card a { color: var(--teal); font-weight: 600; }
+.coin-photo {
+  width: 240px; max-width: 70vw; aspect-ratio: 1; margin: 0 auto 16px;
+  border-radius: 24px; overflow: hidden; box-shadow: 0 8px 28px rgba(15, 23, 42, 0.14);
+  background: #efe6d6;
+}
+.coin-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.coin-back.has-photo { display: flex; gap: 16px; align-items: center; }
+.coin-back-photo {
+  width: 96px; height: 96px; object-fit: cover; border-radius: 14px; flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+}
+@media (max-width: 380px) { .coin-back.has-photo { flex-direction: column; align-items: flex-start; } }
+
+/* Run page, picture-first: photos carry the feeling, words stay short */
+.photo-band { position: relative; border-radius: 20px; overflow: hidden; margin-bottom: 14px; background: #e7e2d8; }
+.photo-band img { width: 100%; height: 210px; object-fit: cover; display: block; }
+.photo-band > div {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 72px 18px 16px;
+  background: linear-gradient(rgba(15, 23, 42, 0), rgba(15, 23, 42, 0.55) 40%, rgba(15, 23, 42, 0.85));
+}
+.photo-band h2 {
+  color: white; font-family: var(--serif); font-size: 1.45rem; font-weight: 600; margin-bottom: 4px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+}
+.photo-band p { color: rgba(255, 255, 255, 0.92); font-size: 0.98rem; line-height: 1.4; }
+.wall-row { display: flex; gap: 8px; }
+.wall-row input { flex: 1; min-width: 0; }
+.wall-row .btn { flex-shrink: 0; padding-left: 22px; padding-right: 22px; }
+.wall-fine { font-size: 0.8rem; color: var(--text-muted); text-align: center; }
+.wall-list li.note-card { display: flex; gap: 12px; align-items: flex-start; border-radius: 18px; }
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%; color: white; font-weight: 700; font-size: 0.95rem;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.note-body { flex: 1; min-width: 0; }
+.wall-empty { text-align: center; color: var(--text-muted); margin-top: 14px; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile {
+  position: relative; display: block; border-radius: 16px; overflow: hidden; aspect-ratio: 4 / 3;
+  text-decoration: none; background: #e7e2d8;
+}
+.tile img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.25s; }
+.tile:hover img { transform: scale(1.04); }
+.tile span {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 12px 10px;
+  color: white; font-weight: 600; font-size: 0.98rem;
+  background: linear-gradient(transparent, rgba(15, 23, 42, 0.75));
+}
+.tile-wide { grid-column: 1 / -1; aspect-ratio: 2 / 1; }
+.hope-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.hope-chips .chip { text-decoration: none; }
+.token-more { margin-top: 18px; }
+.token-more summary { cursor: pointer; color: var(--teal); font-weight: 600; }
+.token-more p { margin-top: 10px; }
+.pass-btn { width: 100%; }
+.token-why { border-top: none; padding-top: 0; }
+.why-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 8px; }
+.why-actions .btn { flex: 1 1 200px; text-align: center; }
+.coin-hero + .token-message, .coin-hero + .hero-sub { text-align: center; }

@@ -1,5 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { PublicWave, WaveKind, WaveStatus } from "./tokens";
+import type { Geo } from "./geo";
+import {
+  COIN_DESIGNS,
+  DEFAULT_GIVE_URL,
+  DEFAULT_WHY,
+  type CoinDesign,
+  type PublicWave,
+  type WaveKind,
+  type WaveStatus,
+} from "./tokens";
 
 const PUBLIC_COIN_STATUSES = ["released", "found", "engraved", "drafted"];
 
@@ -39,6 +48,44 @@ function parseNotes(raw: unknown): Record<string, string> {
   } catch {
     return {};
   }
+}
+
+function text(v: unknown, max = 4000): string | null {
+  if (typeof v !== "string") return null;
+  const t = v.trim();
+  return t ? t.slice(0, max) : null;
+}
+
+/** Only https links leave this page; a typo in Laser must not become a javascript: link. */
+function httpsUrl(v: unknown, hosts?: string[]): string | null {
+  const t = text(v, 500);
+  if (!t) return null;
+  try {
+    const u = new URL(t);
+    if (u.protocol !== "https:") return null;
+    if (hosts && !hosts.some((h) => u.hostname === h || u.hostname.endsWith(`.${h}`))) return null;
+    return u.toString();
+  } catch {
+    return null;
+  }
+}
+
+const LASER_HOSTS = ["laser.unitedundergod.org", "laser.engrave.market", "engrave.market", "www.engrave.market"];
+
+/** A coin photo from Laser storage, resized for a phone (Laser caps ?w at 640). */
+function coinPhoto(v: unknown): string | null {
+  const u = httpsUrl(v, LASER_HOSTS);
+  if (!u) return null;
+  const url = new URL(u);
+  if (url.pathname.startsWith("/api/files/") && !url.searchParams.has("w") && !url.pathname.endsWith(".svg")) {
+    url.searchParams.set("w", "640");
+  }
+  return url.toString();
+}
+
+function asDesign(v: unknown, front: string): CoinDesign {
+  if (typeof v === "string" && (COIN_DESIGNS as string[]).includes(v)) return v as CoinDesign;
+  return /LOVED/i.test(front) ? "cross" : "none";
 }
 
 export async function loadPublicWave(
@@ -110,7 +157,15 @@ export async function loadPublicWave(
   const { count: experience_count } = await sb
     .from("presence_coin_scans")
     .select("id", { count: "exact", head: true })
-    .eq("coin_id", coin.id);
+    .eq("coin_id", coin.id)
+    .neq("kind", "found");
+  const { count: foundScans } = await sb
+    .from("presence_coin_scans")
+    .select("id", { count: "exact", head: true })
+    .eq("coin_id", coin.id)
+    .eq("kind", "found");
+
+  const encouragement_count = await countEncouragements(sb, coin.id, coin.batch_id);
 
   const kind = asKind(placeKind, notes.kind || null, coin.kind);
   const status = asStatus(coin.status, (batch?.status as string) || null);
@@ -131,12 +186,53 @@ export async function loadPublicWave(
     place_city,
     notice_prompt,
     best_time,
-    found_count: coin.found_at ? 1 : 0,
+    found_count: typeof foundScans === "number" && foundScans > 0 ? foundScans : coin.found_at ? 1 : 0,
     experience_count: typeof experience_count === "number" ? experience_count : 0,
     going_count,
     closed: status === "closed",
+    run_size: typeof batch?.quantity === "number" ? (batch.quantity as number) : 1,
+    design: asDesign(notes.design, coin.front_text),
+    front_image_url: coinPhoto(notes.front_image_url),
+    back_image_url: coinPhoto(notes.back_image_url),
+    verse_ref: text(notes.verse_ref, 80),
+    verse_text: text(notes.verse_text, 1000),
+    // Runs made before paraphrases quoted the Berean text exactly; new ones say "paraphrase".
+    verse_style: notes.verse_style === "paraphrase" ? "paraphrase" : "quote",
+    story: text(notes.story),
+    facebook_url: httpsUrl(notes.facebook_url, ["facebook.com", "fb.com"]),
+    instagram_url: httpsUrl(notes.instagram_url, ["instagram.com"]),
+    gather_text: text(notes.gather_text, 1000),
+    why_text: text(notes.why_text) || DEFAULT_WHY,
+    give_url: httpsUrl(notes.donate_url) || DEFAULT_GIVE_URL,
+    sponsor_name: text(notes.sponsor_name, 120),
+    encouragement_count,
   };
   return { wave, missingTables: false };
+}
+
+/** The wall belongs to the run (batch), so every coin in it sees the same notes. */
+export async function countEncouragements(
+  sb: SupabaseClient,
+  coinId: string,
+  batchId: string | null,
+): Promise<number> {
+  let q = sb.from("presence_coin_encouragements").select("id", { count: "exact", head: true }).eq("status", "shown");
+  q = batchId ? q.eq("batch_id", batchId) : q.eq("coin_id", coinId);
+  const { count } = await q;
+  return typeof count === "number" ? count : 0;
+}
+
+export async function coinForCode(
+  sb: SupabaseClient,
+  code: string,
+): Promise<{ id: string; batch_id: string | null; status: string } | null> {
+  const { data } = await sb
+    .from("presence_coins")
+    .select("id, batch_id, status")
+    .eq("code", code.trim().toUpperCase())
+    .maybeSingle();
+  if (!data || !PUBLIC_COIN_STATUSES.includes(data.status)) return null;
+  return data;
 }
 
 export async function coinId(sb: SupabaseClient, code: string): Promise<string | null> {
@@ -148,7 +244,12 @@ export async function coinId(sb: SupabaseClient, code: string): Promise<string |
   return data?.id ?? null;
 }
 
-export async function bumpFound(sb: SupabaseClient, code: string): Promise<void> {
+export async function bumpFound(
+  sb: SupabaseClient,
+  code: string,
+  ipHash: string | null = null,
+  geo: Geo | null = null,
+): Promise<void> {
   const { data } = await sb
     .from("presence_coins")
     .select("id, status")
@@ -162,6 +263,27 @@ export async function bumpFound(sb: SupabaseClient, code: string): Promise<void>
       updated_at: new Date().toISOString(),
     })
     .eq("id", data.id);
+  // One "found" per browser session (TokenCard guards with sessionStorage) and per
+  // person per day here, so a run's count means people, not page refreshes.
+  if (ipHash) {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count } = await sb
+      .from("presence_coin_scans")
+      .select("id", { count: "exact", head: true })
+      .eq("coin_id", data.id)
+      .eq("kind", "found")
+      .eq("ip_hash", ipHash)
+      .gte("created_at", since);
+    if ((count || 0) > 0) return;
+  }
+  await sb.from("presence_coin_scans").insert({
+    coin_id: data.id,
+    kind: "found",
+    ip_hash: ipHash,
+    city: geo?.city ?? null,
+    region: geo?.region ?? null,
+    country: geo?.country ?? null,
+  });
 }
 
 export { coinId as waveId };

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { emitJourneyEvent } from "@/lib/journey";
-import { tablesMissing, coinId } from "@/lib/token-data";
+import { coinForCode } from "@/lib/token-data";
+import { ipHash, saveEncouragement } from "@/lib/encourage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,29 +34,25 @@ export async function POST(
   if (what.length < 3) {
     return NextResponse.json({ ok: false, error: "Tell us one thing you noticed." }, { status: 400 });
   }
-  if (what.length > 2000) {
-    return NextResponse.json({ ok: false, error: "Keep it to a few sentences." }, { status: 400 });
-  }
-  const id = await coinId(sb, code);
-  if (!id) {
+  const coin = await coinForCode(sb, code);
+  if (!coin) {
     return NextResponse.json({ ok: false, error: "That coin is not in this town yet." }, { status: 404 });
   }
   const displayName =
     (user.user_metadata as { display_name?: string } | undefined)?.display_name ||
     user.email?.split("@")[0] ||
     "A neighbor";
-  const { error } = await sb.from("presence_coin_scans").insert({
-    coin_id: id,
-    kind: "notice",
-    auth_user_id: user.id,
-    guest_name: displayName,
-    note: what,
+  // presence_coin_scans.kind only allows view/found/coming, so "notice" rows were
+  // rejected on every submit. What someone noticed now lands on the run's wall.
+  const result = await saveEncouragement(sb, {
+    coin,
+    message: what,
+    displayName,
+    authUserId: user.id,
+    ipHash: ipHash(req),
   });
-  if (error) {
-    if (tablesMissing(error.message)) {
-      return NextResponse.json({ ok: false, error: "Token tables are not on this database yet." }, { status: 503 });
-    }
-    return NextResponse.json({ ok: false, error: "Could not save that. Try again." }, { status: 503 });
+  if (!result.ok) {
+    return NextResponse.json({ ok: false, error: result.error }, { status: result.httpStatus });
   }
   await emitJourneyEvent(sb, {
     email: user.email || "",
@@ -65,5 +62,5 @@ export async function POST(
     detail: "A You Are Awesome coin opened a moment of presence.",
     seasonHint: "belong",
   }).catch(() => {});
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, status: result.status });
 }

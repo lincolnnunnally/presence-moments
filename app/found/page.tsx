@@ -48,6 +48,9 @@ export default function FoundPage() {
         <p style={{ marginTop: 24 }}>
           <a className="btn primary" href="/">
             Sit with people
+          </a>{" "}
+          <a className="btn secondary" href="/order">
+            Get coins for your town
           </a>
         </p>
         <FeatureLinks current="found" />
