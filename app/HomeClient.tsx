@@ -69,7 +69,7 @@ function tomorrowStr() {
   return d.toISOString().slice(0, 10);
 }
 
-export default function HomeClient() {
+export default function HomeClient({ intro }: { intro?: React.ReactNode } = {}) {
   const sb = createPresenceClient();
 
   // auth
@@ -402,7 +402,10 @@ export default function HomeClient() {
     return (
       <div id="app">
         <div className="auth-wrap">
-          <p className="hero-sub">This space isn&apos;t connected yet. Please try again shortly.</p>
+          <div className="auth-inner">
+            {intro}
+            <p className="hero-sub">This space isn&apos;t connected yet. Please try again shortly.</p>
+          </div>
         </div>
       </div>
     );
@@ -413,8 +416,10 @@ export default function HomeClient() {
     return (
       <div id="app">
         <div className="auth-wrap">
-          <h1 className="sr-only">Presence — come as you are, leave less alone</h1>
-          <p className="hero-sub">…</p>
+          <div className="auth-inner">
+            {intro}
+            <p className="hero-sub">…</p>
+          </div>
         </div>
       </div>
     );
@@ -426,17 +431,7 @@ export default function HomeClient() {
       <div id="app">
         <div className="auth-wrap">
           <div className="auth-inner">
-            <div className="auth-head">
-              <span className="logo-icon">🌿</span>
-              <h1>Come as you are.<br />Leave less alone.</h1>
-              <p>
-                Simple moments of real presence — coffee, walks, meals, games —
-                with people who choose acceptance over judgment.
-              </p>
-              <a className="found-link" href="/found">
-                Found a coin? You are awesome.
-              </a>
-            </div>
+            {intro}
             <div className="guest-moments">
               <h2>Nearby in Vidalia</h2>
               {momentsError ? (
