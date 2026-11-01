@@ -49,9 +49,9 @@ export const FEATURES: Record<FeatureKey, Feature> = {
 export const FEATURE_ORDER: FeatureKey[] = ["host", "join", "connect", "found"];
 
 export const HOME = {
-  title: "Presence — host or join small local moments near you",
+  title: "Meet people near you in Vidalia, GA | Presence",
   description:
-    "Host or join low-pressure local moments — coffee, walks, meals, game nights — with people who choose acceptance over judgment. Come as you are.",
+    "Meet people near you in Vidalia, GA. Host or join low-pressure local moments — coffee, walks, meals, game nights — with people who choose acceptance over judgment.",
 };
 
 export function absoluteUrl(path: string): string {
