@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { preflight, withCors } from "@/lib/cors";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { bumpFound, loadPublicWave } from "@/lib/token-data";
 import { ipHash } from "@/lib/encourage";
@@ -7,7 +8,7 @@ import { geoFrom } from "@/lib/geo";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(
+async function handleGET(
   req: Request,
   { params }: { params: Promise<{ code: string }> },
 ) {
@@ -37,4 +38,12 @@ export async function GET(
     await bumpFound(sb, wave.code, ipHash(req), geoFrom(req)).catch(() => {});
   }
   return NextResponse.json({ ok: true, wave });
+}
+
+export async function GET(req: Request, ctx: { params: Promise<{ code: string }> }) {
+  return withCors(req, await handleGET(req, ctx));
+}
+
+export function OPTIONS(req: Request) {
+  return preflight(req);
 }

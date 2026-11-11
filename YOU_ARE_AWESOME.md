@@ -9,6 +9,7 @@ This is **not** a new app and **not** a scavenger hunt. A token is an invitation
 | Concern | Home |
 |---|---|
 | Public QR, encouragement, share what you noticed, table RSVP, next step into Spark / Kindred / Neighborly / ChurchConnect | **Presence** (`presence.unitedundergod.org/t/{code}`) |
+| The same run, opened on Spark of Hope when the run's QR is set to it | **Spark of Hope** (`spark-of-hope.com/t/{code}`), reading and writing through Presence's API |
 | Phrase library, restaurant schedule, dates on coins, what is overdone, engraving jobs, staff tasks, florist samples, shop pages, prices | **Laser Engraving** admin → **Tokens** and **Drops** |
 | Shared identity | LPL `person` / GoTrue — one login |
 | First pilot | Vidalia, Georgia |
@@ -37,6 +38,7 @@ A **run** is one `presence_coin_batches` row: print 100 of the same coin, one QR
    - **What the wall asks for** is set per run with `wall_mode` in the batch notes. The default asks for a word for the next finder. `"wall_mode": "thankful"` (first used on the Thankful = Joyful coin, owner direction 2026-11-11) asks "What are you thankful for today?" and saves the note as `kind = 'thankful'`.
    - **Carrying something hard today?** sits under the wall on every open run. The finder chooses: **keep it private**, which opens Spark of Hope's check-in (`spark-of-hope.com/whats-going-on`), or **share it to help someone**, which saves a note with `kind = 'struggle'`. A struggle note is always **held** until a person reads it in Laser → Tokens. The 988 line is always shown there, because a held note is not read right away.
    - **Spark of Hope shows the notes too.** `spark_hope_notes()` (SQL `006`) returns the notes currently shown, with the coin's words, and Spark's Hope Stories page lists them. Hiding a note in Laser removes it from both places.
+   - **A coin can open on Spark of Hope instead** (owner direction, 2026-11-11: "I need to be able to send people to Spark of Hope as well, not just Presence"). `spark-of-hope.com/t/{code}` shows the same run in Spark's own pages, with the check-in right there. It reads the run from this API and saves and flags notes through it (`lib/cors.ts` lets Spark's sites call it from the browser), so there is still one filter, one rate limit and one review queue. Laser's run editor has "The QR opens on" (`qr_home` in the batch notes), and the engraving card's QR follows it.
 4. **Find each other.** Facebook / Instagram group links (`facebook_url`, `instagram_url`, which must be https on those hosts), plus meeting up in person and finding a church. A group link that does not exist yet is not shown. Empty boards stay empty.
 5. **Pass it on.** Share sheet, or "leave it where someone else will find it".
 6. **Why we are doing this + Support this ministry.** `why_text` (default in `lib/tokens.ts`), `donate_url` (default `https://unitedundergod.org/give`), and `sponsor_name` if a sponsor paid for the run.

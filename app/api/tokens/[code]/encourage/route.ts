@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { preflight, withCors } from "@/lib/cors";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { emitJourneyEvent } from "@/lib/journey";
 import { coinForCode } from "@/lib/token-data";
@@ -16,7 +17,7 @@ async function userFromBearer(sb: NonNullable<ReturnType<typeof createAdminClien
   return data.user;
 }
 
-export async function GET(_req: Request, { params }: { params: Promise<{ code: string }> }) {
+async function handleGET(_req: Request, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const sb = createAdminClient();
   if (!sb) {
@@ -31,7 +32,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ code: s
 }
 
 /** No account needed: a finder may leave a word for the next person. */
-export async function POST(req: Request, { params }: { params: Promise<{ code: string }> }) {
+async function handlePOST(req: Request, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const sb = createAdminClient();
   if (!sb) {
@@ -75,4 +76,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ code: s
     status: result.status,
     encouragement: result.status === "shown" ? result.encouragement : null,
   });
+}
+
+export async function GET(req: Request, ctx: { params: Promise<{ code: string }> }) {
+  return withCors(req, await handleGET(req, ctx));
+}
+
+export async function POST(req: Request, ctx: { params: Promise<{ code: string }> }) {
+  return withCors(req, await handlePOST(req, ctx));
+}
+
+export function OPTIONS(req: Request) {
+  return preflight(req);
 }
