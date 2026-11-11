@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { preflight, withCors } from "@/lib/cors";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { coinForCode } from "@/lib/token-data";
 import { HIDE_AT_REPORTS, ipHash } from "@/lib/encourage";
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Anyone may flag a note. Three different people hide it until Laser reviews it. */
-export async function POST(req: Request, { params }: { params: Promise<{ code: string; id: string }> }) {
+async function handlePOST(req: Request, { params }: { params: Promise<{ code: string; id: string }> }) {
   const { code, id } = await params;
   if (!UUID.test(id)) {
     return NextResponse.json({ ok: false, error: "Unknown note." }, { status: 400 });
@@ -51,4 +52,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ code: s
     return NextResponse.json({ ok: false, error: "Could not send that. Try again." }, { status: 503 });
   }
   return NextResponse.json({ ok: true, hidden: hide });
+}
+
+export async function POST(req: Request, ctx: { params: Promise<{ code: string; id: string }> }) {
+  return withCors(req, await handlePOST(req, ctx));
+}
+
+export function OPTIONS(req: Request) {
+  return preflight(req);
 }

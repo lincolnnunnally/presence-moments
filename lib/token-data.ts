@@ -206,6 +206,7 @@ export async function loadPublicWave(
     give_url: httpsUrl(notes.donate_url) || DEFAULT_GIVE_URL,
     sponsor_name: text(notes.sponsor_name, 120),
     encouragement_count,
+    wall_mode: notes.wall_mode === "thankful" ? "thankful" : "encourage",
   };
   return { wave, missingTables: false };
 }

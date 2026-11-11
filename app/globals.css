@@ -491,3 +491,22 @@ input:not([type]), input[type="tel"] {
 .why-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 8px; }
 .why-actions .btn { flex: 1 1 200px; text-align: center; }
 .coin-hero + .token-message, .coin-hero + .hero-sub { text-align: center; }
+
+/* Coin page: "Carrying something hard today?" Two choices, side by side on a
+   wide screen and stacked on a phone. Both are full tap targets. */
+.token-hard { margin-top: 32px; }
+.token-hard h2 { font-size: 1.2rem; margin-bottom: 8px; }
+.hard-choices { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 560px) { .hard-choices { grid-template-columns: 1fr 1fr; } }
+.hard-choice {
+  display: flex; flex-direction: column; gap: 6px; text-align: left; text-decoration: none;
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px;
+  color: var(--text); font-family: inherit; font-size: 0.95rem; line-height: 1.45; cursor: pointer;
+}
+.hard-choice:hover, .hard-choice[aria-expanded="true"] { border-color: var(--teal); }
+.hard-choice:focus-visible { outline: 3px solid var(--teal-light); outline-offset: 2px; }
+.hard-choice strong { font-size: 1.02rem; color: var(--teal); }
+.hard-choice span { color: var(--text-muted); }
+.hard-form { margin-top: 12px; }
+.hard-crisis { margin-top: 14px; font-size: 0.88rem; line-height: 1.5; color: var(--text-muted); }
+.hard-crisis a { color: #b91c1c; font-weight: 600; }

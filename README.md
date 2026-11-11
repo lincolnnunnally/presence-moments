@@ -29,6 +29,7 @@ Part of the **Life Produces Life** ecosystem. Accounts, identity, and the growth
 - `presence_join_requests` — a guest's request to join (status: requested / accepted / declined)
 - `presence_coin_batches` (a run) / `presence_coins` / `presence_coin_scans` / `presence_places` — You Are Awesome coins, written by Laser Engraving
 - `presence_coin_encouragements` — the public encouragement wall on a run's page (SQL: `sql/004_token_encouragement.sql`)
+  Each note has a `kind` (encouragement, thankful, struggle), and `spark_hope_notes()` feeds the shown ones to Spark of Hope (SQL: `sql/006_note_kinds_and_spark_feed.sql`)
 
 RLS: any signed-in person can discover open moments; only the host can edit their
 own; guests see their own requests, hosts see requests to their moments.

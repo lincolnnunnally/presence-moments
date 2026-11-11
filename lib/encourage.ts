@@ -8,13 +8,19 @@
  */
 import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Encouragement } from "./tokens";
+import type { Encouragement, NoteKind } from "./tokens";
 
 export const MESSAGE_MIN = 3;
 export const MESSAGE_MAX = 500;
 export const NAME_MAX = 40;
 export const WALL_LIMIT = 30;
 const PER_HOUR_PER_PERSON = 3;
+/** Shown in Laser → Tokens beside a held note, so the reviewer knows why it waited. */
+export const STRUGGLE_HOLD = "shared something hard: read with care before showing";
+
+export function asNoteKind(v: unknown): NoteKind {
+  return v === "thankful" || v === "struggle" ? v : "encouragement";
+}
 export const HIDE_AT_REPORTS = 3;
 
 const BLOCKED = [
@@ -81,8 +87,10 @@ export async function saveEncouragement(
     displayName: string;
     authUserId: string | null;
     ipHash: string | null;
+    kind?: NoteKind;
   },
 ): Promise<SaveResult> {
+  const kind = args.kind ?? "encouragement";
   const message = cleanText(args.message, MESSAGE_MAX + 1);
   const name = cleanText(args.displayName, NAME_MAX) || "A neighbor";
   if (message.length < MESSAGE_MIN) {
@@ -104,7 +112,9 @@ export async function saveEncouragement(
     }
   }
 
-  const reason = holdReason(message, name);
+  // Something hard never goes up on its own. A person reads it first: it may
+  // name someone else, or come from a person who needs a reply more than a wall.
+  const reason = holdReason(message, name) ?? (kind === "struggle" ? STRUGGLE_HOLD : null);
   const status = reason ? "held" : "shown";
   const { data, error } = await sb
     .from("presence_coin_encouragements")
@@ -117,6 +127,7 @@ export async function saveEncouragement(
       ip_hash: args.ipHash,
       status,
       held_reason: reason,
+      kind,
     })
     .select("id, display_name, message, created_at")
     .single();
