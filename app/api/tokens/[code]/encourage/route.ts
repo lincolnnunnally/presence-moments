@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { emitJourneyEvent } from "@/lib/journey";
 import { coinForCode } from "@/lib/token-data";
-import { ipHash, listEncouragements, saveEncouragement } from "@/lib/encourage";
+import { asNoteKind, ipHash, listEncouragements, saveEncouragement } from "@/lib/encourage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -55,6 +55,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ code: s
     displayName: typeof body.name === "string" && body.name.trim() ? body.name : accountName,
     authUserId: user?.id ?? null,
     ipHash: ipHash(req),
+    kind: asNoteKind(body.kind),
   });
   if (!result.ok) {
     return NextResponse.json({ ok: false, error: result.error }, { status: result.httpStatus });

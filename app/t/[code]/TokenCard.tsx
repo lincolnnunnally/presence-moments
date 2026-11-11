@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createPresenceClient } from "@/lib/supabase";
-import { GIVE_ORG, TOKEN_HANDOFFS, formatInvite, type Encouragement, type PublicWave } from "@/lib/tokens";
+import { GIVE_ORG, SPARK_CHECKIN_URL, TOKEN_HANDOFFS, formatInvite, type Encouragement, type PublicWave } from "@/lib/tokens";
 import { fullVerseUrl } from "@/lib/geo";
 import CoinEmblem from "./CoinEmblem";
 
@@ -14,6 +14,32 @@ const WALL_PROMPTS = [
   "Whoever finds the next one: you are not alone.",
   "I needed this today. Passing it on.",
 ];
+
+const THANKFUL_PROMPTS = [
+  "My neighbor waved at me this morning.",
+  "A warm meal, and someone to share it with.",
+  "I woke up today. That counts.",
+];
+
+/** What the wall asks for, by the run's wall_mode. */
+const WALL_COPY = {
+  encourage: {
+    heading: "Leave a note for the next finder",
+    sub: "Write a few kind words. Whoever finds a coin like yours will read them here.",
+    label: "Your encouragement",
+    prompts: WALL_PROMPTS,
+    thanks: "Thank you. The next person who finds one of these will read that.",
+    empty: "Be the first to leave a note.",
+  },
+  thankful: {
+    heading: "What are you thankful for today?",
+    sub: "Name one thing, big or small. The next person who finds a coin will read it, and it may help them find one of their own.",
+    label: "Something you are thankful for",
+    prompts: THANKFUL_PROMPTS,
+    thanks: "Thank you. Saying it out loud is the practice. Someone else will read that and look for their own.",
+    empty: "Be the first to name something.",
+  },
+} as const;
 
 const CARRYING: [string, string][] = [
   ["lonely", "Loneliness"],
@@ -66,6 +92,13 @@ export default function TokenCard({ initial, initialWall }: Props) {
   const [wallNote, setWallNote] = useState("");
   const [wallError, setWallError] = useState("");
   const [wallBusy, setWallBusy] = useState(false);
+  const [hardOpen, setHardOpen] = useState(false);
+  const [hardMessage, setHardMessage] = useState("");
+  const [hardName, setHardName] = useState("");
+  const [hardTrap, setHardTrap] = useState("");
+  const [hardBusy, setHardBusy] = useState(false);
+  const [hardError, setHardError] = useState("");
+  const [hardSent, setHardSent] = useState(false);
   const [reported, setReported] = useState<Record<string, boolean>>({});
   const [showAuth, setShowAuth] = useState(false);
   const [shared, setShared] = useState("");
@@ -157,7 +190,12 @@ export default function TokenCard({ initial, initialWall }: Props) {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ name: wallName || (user ? displayName : ""), message: wallMessage, website: wallTrap }),
+        body: JSON.stringify({
+          name: wallName || (user ? displayName : ""),
+          message: wallMessage,
+          website: wallTrap,
+          kind: wave.wall_mode === "thankful" ? "thankful" : "encouragement",
+        }),
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -167,7 +205,7 @@ export default function TokenCard({ initial, initialWall }: Props) {
       if (d.status === "shown" && d.encouragement) {
         setWall((w) => [d.encouragement as Encouragement, ...w]);
         setWave((w) => ({ ...w, encouragement_count: w.encouragement_count + 1 }));
-        setWallNote("Thank you. The next person who finds one of these will read that.");
+        setWallNote(WALL_COPY[wave.wall_mode].thanks);
       } else {
         setWallNote("Thank you. Someone will read it before it goes up on the page.");
       }
@@ -176,6 +214,30 @@ export default function TokenCard({ initial, initialWall }: Props) {
       setWallError("Something went wrong. Please try again.");
     } finally {
       setWallBusy(false);
+    }
+  }
+
+  async function shareHard(e: React.FormEvent) {
+    e.preventDefault();
+    setHardError("");
+    setHardBusy(true);
+    try {
+      const res = await fetch(`/api/tokens/${encodeURIComponent(wave.code)}/encourage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: hardName, message: hardMessage, website: hardTrap, kind: "struggle" }),
+      });
+      const d = await res.json();
+      if (!res.ok || !d.ok) {
+        setHardError(d.error || "Could not save that.");
+        return;
+      }
+      setHardSent(true);
+      setHardMessage("");
+    } catch {
+      setHardError("Something went wrong. Please try again.");
+    } finally {
+      setHardBusy(false);
     }
   }
 
@@ -467,8 +529,8 @@ export default function TokenCard({ initial, initialWall }: Props) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/img/token/note.jpg" alt="" loading="lazy" />
             <div>
-              <h2 id="wall-heading">Leave a note for the next finder</h2>
-              <p>Write a few kind words. Whoever finds a coin like yours will read them here.</p>
+              <h2 id="wall-heading">{WALL_COPY[wave.wall_mode].heading}</h2>
+              <p>{WALL_COPY[wave.wall_mode].sub}</p>
             </div>
           </div>
           {!wave.closed && (
@@ -480,8 +542,10 @@ export default function TokenCard({ initial, initialWall }: Props) {
                 rows={2}
                 value={wallMessage}
                 onChange={(e) => setWallMessage(e.target.value)}
-                placeholder={WALL_PROMPTS[wave.code.length % WALL_PROMPTS.length]}
-                aria-label="Your encouragement"
+                placeholder={
+                  WALL_COPY[wave.wall_mode].prompts[wave.code.length % WALL_COPY[wave.wall_mode].prompts.length]
+                }
+                aria-label={WALL_COPY[wave.wall_mode].label}
               />
               <div className="wall-row">
                 <input
@@ -538,9 +602,93 @@ export default function TokenCard({ initial, initialWall }: Props) {
               ))}
             </ul>
           ) : (
-            <p className="wall-empty">Be the first to leave a note.</p>
+            <p className="wall-empty">{WALL_COPY[wave.wall_mode].empty}</p>
           )}
         </section>
+
+        {/* Owner direction, 2026-11-11: a finder who is carrying something hard
+            chooses. Keep it private (Spark of Hope's check-in), or share it so
+            someone else feels less alone, which a person reads before it shows. */}
+        {!wave.closed && (
+          <section className="token-hard" aria-labelledby="hard-heading">
+            <h2 id="hard-heading">Carrying something hard today?</h2>
+            <p className="hero-sub wall-sub">
+              You do not have to feel fine to be here. If today is heavy, you can say so. You choose who sees it.
+            </p>
+            {hardSent ? (
+              <p className="wall-thanks" role="status">
+                Thank you for trusting us with that. A person will read it before anyone else sees it.
+              </p>
+            ) : (
+              <>
+                <div className="hard-choices">
+                  <a
+                    className="hard-choice"
+                    href={SPARK_CHECKIN_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <strong>Keep it private</strong>
+                    <span>Write it in Spark of Hope. Only you see it, and you get one small step to take.</span>
+                  </a>
+                  <button
+                    type="button"
+                    className="hard-choice"
+                    aria-expanded={hardOpen}
+                    onClick={() => setHardOpen((v) => !v)}
+                  >
+                    <strong>Share it to help someone</strong>
+                    <span>Someone else is carrying the same thing. A person reads your words before they are shown.</span>
+                  </button>
+                </div>
+                {hardOpen && (
+                  <form onSubmit={shareHard} className="wall-form hard-form">
+                    <textarea
+                      required
+                      minLength={3}
+                      maxLength={500}
+                      rows={3}
+                      value={hardMessage}
+                      onChange={(e) => setHardMessage(e.target.value)}
+                      placeholder="What are you going through?"
+                      aria-label="What you are going through"
+                    />
+                    <div className="wall-row">
+                      <input
+                        type="text"
+                        maxLength={40}
+                        value={hardName}
+                        onChange={(e) => setHardName(e.target.value)}
+                        placeholder="First name (optional)"
+                        aria-label="Name to show (optional)"
+                      />
+                      <button className="btn primary" type="submit" disabled={hardBusy || hardMessage.trim().length < 3}>
+                        {hardBusy ? "…" : "Share"}
+                      </button>
+                    </div>
+                    <input
+                      className="wall-trap"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={hardTrap}
+                      onChange={(e) => setHardTrap(e.target.value)}
+                      aria-hidden="true"
+                      name="website"
+                    />
+                    {hardError && <p className="auth-error">{hardError}</p>}
+                    <p className="wall-fine">
+                      No account needed. Leave out other people&apos;s names. This is not read right away.
+                    </p>
+                  </form>
+                )}
+              </>
+            )}
+            <p className="hard-crisis">
+              If you are thinking about hurting yourself, you can reach a real person right now:{" "}
+              <a href="tel:988">call 988</a> or <a href="sms:988">text 988</a>. Free, any time.
+            </p>
+          </section>
+        )}
 
         <section className="token-gather">
           <h2>Find each other</h2>

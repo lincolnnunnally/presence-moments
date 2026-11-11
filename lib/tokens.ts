@@ -18,6 +18,18 @@ export const DEFAULT_WHY =
 export const DEFAULT_GIVE_URL = "https://unitedundergod.org/give";
 export const GIVE_ORG = "United Under God, Inc.";
 
+/**
+ * What a note is. "encouragement" is a word for the next finder, "thankful" is
+ * something the finder is thankful for, "struggle" is something hard they chose
+ * to share so someone else feels less alone (always read by a person first).
+ */
+export type NoteKind = "encouragement" | "thankful" | "struggle";
+/** What the wall on a run's page asks for. Set per run in the batch notes (`wall_mode`). */
+export type WallMode = "encourage" | "thankful";
+
+/** Where "keep it private" sends someone who is carrying something hard. */
+export const SPARK_CHECKIN_URL = "https://spark-of-hope.com/whats-going-on";
+
 export type Encouragement = {
   id: string;
   display_name: string;
@@ -64,6 +76,7 @@ export type PublicWave = {
   give_url: string;
   sponsor_name: string | null;
   encouragement_count: number;
+  wall_mode: WallMode;
 };
 
 export type Handoff = {
