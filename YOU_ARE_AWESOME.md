@@ -51,6 +51,16 @@ All of these live in the batch's `notes` JSON, the same place Laser already keep
 
 Finds: each scan logs one `presence_coin_scans` row with `kind='found'` (once per browser session, and once per person per day), so a run can say how many people found one.
 
+## Weekly meetups (owner, 2026-11-19)
+
+Meetup coins are made in Laser → Tokens (Spark of Hope's admin makes the encouraging coins). A wave becomes a weekly meetup when Edit page has **Every** (day) and **At** (time), plus a place and address. The run page then shows "Every Monday at 10:00 AM · Birdies", the next date or "No meetup Monday, November 24" with the note, and an email sign-up (no account; "also remind me the day before").
+
+- Followers: `presence_meetup_followers` (SQL `007`). Sign-up is `POST /api/tokens/{code}/follow`; every email links to `/meetup/unsubscribe?t=…`.
+- Weeks off live in the run notes (`meetup_skips`). Laser's wave card marks a week off or back on and can email followers; "Email everyone following" is for changes.
+- Reminders: Laser's daily cron (`/api/tokens/meetups/reminders`, 22:00 UTC) emails followers who asked, the day before a meeting that is on, once per date (`presence_meetup_sends`).
+- The schedule math is in `lib/meetup.ts` here and `_next_meetings` in Laser's `tokens_router.py`; keep them the same. Times are Georgia time (America/New_York).
+- Printing more: every coin in a wave shares one QR, so Laser's "Make more" opens the same engraving card and the log form.
+
 ## Keeping count (for a church or foundation)
 
 | What | Where it is recorded |

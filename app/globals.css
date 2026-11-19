@@ -510,3 +510,11 @@ input:not([type]), input[type="tel"] {
 .hard-form { margin-top: 12px; }
 .hard-crisis { margin-top: 14px; font-size: 0.88rem; line-height: 1.5; color: var(--text-muted); }
 .hard-crisis a { color: #b91c1c; font-weight: 600; }
+
+/* Weekly meetup on a coin page: schedule, next date or a week off, email sign-up. */
+.meetup-card h2 { font-size: 1.25rem; }
+.meetup-next { font-size: 1.05rem; margin: 8px 0; }
+.meetup-follow { margin-top: 14px; }
+.meetup-label { font-weight: 600; font-size: 0.95rem; }
+.meetup-check { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+.meetup-check input { width: 18px; height: 18px; }
