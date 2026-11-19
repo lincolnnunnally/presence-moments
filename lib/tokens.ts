@@ -77,6 +77,17 @@ export type PublicWave = {
   sponsor_name: string | null;
   encouragement_count: number;
   wall_mode: WallMode;
+  /** Set when the run is a weekly meetup (Laser -> Tokens). */
+  meetup: PublicMeetup | null;
+};
+
+export type PublicMeetup = {
+  weekday: string;
+  time: string;
+  place: string | null;
+  address: string | null;
+  /** The next few dates, weeks off marked. The first is the next meeting. */
+  upcoming: { date: string; label: string; skipped: boolean; note: string | null }[];
 };
 
 export type Handoff = {

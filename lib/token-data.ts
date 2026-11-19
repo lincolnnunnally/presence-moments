@@ -1,10 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Geo } from "./geo";
+import { formatMeetingDate, formatTime, meetupFrom, upcomingMeetings, WEEKDAYS } from "./meetup";
 import {
   COIN_DESIGNS,
   DEFAULT_GIVE_URL,
   DEFAULT_WHY,
   type CoinDesign,
+  type PublicMeetup,
   type PublicWave,
   type WaveKind,
   type WaveStatus,
@@ -207,8 +209,24 @@ export async function loadPublicWave(
     sponsor_name: text(notes.sponsor_name, 120),
     encouragement_count,
     wall_mode: notes.wall_mode === "thankful" ? "thankful" : "encourage",
+    meetup: publicMeetup(notes),
   };
   return { wave, missingTables: false };
+}
+
+function publicMeetup(notes: Record<string, unknown>): PublicMeetup | null {
+  const schedule = meetupFrom(notes);
+  if (!schedule) return null;
+  return {
+    weekday: WEEKDAYS[schedule.weekday],
+    time: formatTime(schedule.time),
+    place: schedule.place,
+    address: schedule.address,
+    upcoming: upcomingMeetings(schedule, new Date(), 4).map((meeting) => ({
+      ...meeting,
+      label: formatMeetingDate(meeting.date),
+    })),
+  };
 }
 
 /** The wall belongs to the run (batch), so every coin in it sees the same notes. */

@@ -107,6 +107,12 @@ export default function TokenCard({ initial, initialWall }: Props) {
   const [rsvpNote, setRsvpNote] = useState("");
   const [rsvpError, setRsvpError] = useState("");
   const [rsvpBusy, setRsvpBusy] = useState(false);
+  const [followEmail, setFollowEmail] = useState("");
+  const [followRemind, setFollowRemind] = useState(true);
+  const [followTrap, setFollowTrap] = useState("");
+  const [followBusy, setFollowBusy] = useState(false);
+  const [followNote, setFollowNote] = useState("");
+  const [followError, setFollowError] = useState("");
 
   const displayName = useMemo(() => {
     return (
@@ -298,6 +304,35 @@ export default function TokenCard({ initial, initialWall }: Props) {
     }
   }
 
+  async function followMeetup(e: React.FormEvent) {
+    e.preventDefault();
+    setFollowError("");
+    setFollowNote("");
+    setFollowBusy(true);
+    try {
+      const res = await fetch(`/api/tokens/${encodeURIComponent(wave.code)}/follow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: followEmail, remind: followRemind, website: followTrap }),
+      });
+      const d = await res.json();
+      if (!res.ok || !d.ok) {
+        setFollowError(d.error || "Could not save that.");
+        return;
+      }
+      setFollowNote(
+        followRemind
+          ? "You are on the list. We will email you the day before each meetup, and if a week is off or anything changes."
+          : "You are on the list. We will email you only if a week is off or anything changes.",
+      );
+      setFollowEmail("");
+    } catch {
+      setFollowError("Something went wrong. Please try again.");
+    } finally {
+      setFollowBusy(false);
+    }
+  }
+
   async function rsvp(status: "going" | "maybe") {
     setRsvpError("");
     setRsvpNote("");
@@ -484,7 +519,83 @@ export default function TokenCard({ initial, initialWall }: Props) {
           </div>
         )}
 
-        {!wave.closed && wave.kind === "table" && (
+        {!wave.closed && wave.meetup && (
+          <div className="culture-card meetup-card" data-testid="meetup">
+            <h2>
+              Every {wave.meetup.weekday} at {wave.meetup.time}
+              {wave.meetup.place ? ` · ${wave.meetup.place}` : ""}
+            </h2>
+            {wave.meetup.address && <p className="moment-place">{wave.meetup.address}</p>}
+            {wave.meetup.upcoming[0] && (
+              <p className="meetup-next" data-testid="meetup-next">
+                {wave.meetup.upcoming[0].skipped ? (
+                  <>
+                    <strong>No meetup {wave.meetup.upcoming[0].label}.</strong>
+                    {wave.meetup.upcoming[0].note ? ` ${wave.meetup.upcoming[0].note}` : ""}
+                    {wave.meetup.upcoming.find((m) => !m.skipped)
+                      ? ` Next: ${wave.meetup.upcoming.find((m) => !m.skipped)!.label}.`
+                      : ""}
+                  </>
+                ) : (
+                  <>
+                    <strong>Next: {wave.meetup.upcoming[0].label}</strong> at {wave.meetup.time}.
+                  </>
+                )}
+              </p>
+            )}
+            {wave.meetup.upcoming.slice(1).some((m) => m.skipped) && (
+              <p className="culture-note">
+                Also off:{" "}
+                {wave.meetup.upcoming
+                  .slice(1)
+                  .filter((m) => m.skipped)
+                  .map((m) => m.label + (m.note ? ` (${m.note})` : ""))
+                  .join("; ")}
+                .
+              </p>
+            )}
+            <p>Come as you are. You do not have to know anyone, and you do not have to stay long.</p>
+            {wave.invite_notes && <p className="culture-note">{wave.invite_notes}</p>}
+            <form onSubmit={followMeetup} className="wall-form meetup-follow">
+              <label className="meetup-label" htmlFor="meetup-email">
+                Get an email if a week is off or anything changes
+              </label>
+              <div className="wall-row">
+                <input
+                  id="meetup-email"
+                  type="email"
+                  required
+                  maxLength={254}
+                  value={followEmail}
+                  onChange={(e) => setFollowEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                />
+                <button className="btn primary" type="submit" disabled={followBusy || !followEmail.includes("@")}>
+                  {followBusy ? "…" : "Keep me posted"}
+                </button>
+              </div>
+              <label className="meetup-check">
+                <input type="checkbox" checked={followRemind} onChange={(e) => setFollowRemind(e.target.checked)} />
+                Also remind me the day before
+              </label>
+              <input
+                className="wall-trap"
+                tabIndex={-1}
+                autoComplete="off"
+                value={followTrap}
+                onChange={(e) => setFollowTrap(e.target.value)}
+                aria-hidden="true"
+                name="website"
+              />
+              {followError && <p className="auth-error">{followError}</p>}
+              {followNote && <p className="wall-thanks" role="status">{followNote}</p>}
+              <p className="wall-fine">No account needed. Every email has a link to stop them.</p>
+            </form>
+          </div>
+        )}
+
+        {!wave.closed && wave.kind === "table" && !wave.meetup && (
           <div className="culture-card">
             <h2>A table is waiting</h2>
             <p>
